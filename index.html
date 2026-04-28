@@ -147,10 +147,12 @@ function selectWarehouse(id, nameAr, nameEn) {
 </script>
 
 <script type="module">
-  // استيراد Firebase SDK
+  // 1. استيراد أدوات Auth وأدوات Firestore (قاعدة البيانات)
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
 
+  // إعدادات مشروعك
   const firebaseConfig = {
     apiKey: "AIzaSyCmLxqV4u5F36WfqWB-eewASjfRelVnyDw",
     authDomain: "proceed-logistics-71fba.firebaseapp.com",
@@ -161,33 +163,66 @@ function selectWarehouse(id, nameAr, nameEn) {
     measurementId: "G-DCM8ZG2HDV"
   };
 
+  // تهيئة الاتصال
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
+  const db = getFirestore(app); // تشغيل قاعدة البيانات
 
-  // ربط الدالة بالنافذة لتعمل مع الأزرار
   window.attemptLogin = async function() {
     const email = document.getElementById('emailInput').value;
     const password = document.getElementById('passwordInput').value;
     const errorEl = document.getElementById('loginError');
+    const cleanEmail = email.trim().toLowerCase();
 
-    // شرط الأمان الخاص بكل مستودع
-    if (email !== selectedWhId + "@proceed.com") {
-      errorEl.innerText = "هذا الحساب غير مخول لدخول " + selectedWhName;
-      errorEl.style.display = 'block';
-      return;
-    }
+    // إظهار رسالة تحميل للمستخدم لأن الاتصال بقاعدة البيانات يأخذ أجزاء من الثانية
+    errorEl.style.display = 'none';
+    const loginBtn = document.querySelector('.btn-login');
+    loginBtn.innerText = 'جاري التحقق...';
+    loginBtn.disabled = true;
 
     try {
+      // 2. جلب قائمة الإيميلات المصرح لها من قاعدة البيانات (Firestore)
+      const docRef = doc(db, "warehouses", selectedWhId); // selectedWhId هو alula أو yanbu الخ
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const allowedEmails = docSnap.data().allowedEmails || [];
+        
+        // 3. التحقق مما إذا كان الإيميل المدخل موجوداً في القائمة المجلوبة من قاعدة البيانات
+        if (!allowedEmails.includes(cleanEmail)) {
+          throw new Error("unauthorized"); // رمي خطأ متعمد لوقف الدخول
+        }
+      } else {
+        throw new Error("no-warehouse-data");
+      }
+
+      // 4. إذا كان الإيميل في القائمة، نقوم بتسجيل الدخول الفعلي عبر Firebase Auth
       await signInWithEmailAndPassword(auth, email, password);
+      
+      // نجاح الدخول
       document.getElementById('loginModal').style.display = 'none';
-      proceedToDashboard();
-    } catch (e) {
-      errorEl.innerText = "بيانات الدخول خاطئة!";
+      document.getElementById('passwordInput').value = ''; 
+      window.proceedToDashboard();
+
+    } catch (error) {
+      // التعامل مع الأخطاء وإظهار الرسالة المناسبة
+      if (error.message === "unauthorized") {
+        errorEl.innerText = "عذراً، حسابك غير مخول لدخول " + selectedWhName;
+      } else if (error.message === "no-warehouse-data") {
+        errorEl.innerText = "لم يتم إعداد صلاحيات هذا المستودع في قاعدة البيانات بعد.";
+      } else {
+        errorEl.innerText = "بيانات الدخول غير صحيحة، تأكد من الإيميل وكلمة المرور.";
+      }
       errorEl.style.display = 'block';
+    } finally {
+      // إعادة الزر لشكله الطبيعي
+      loginBtn.innerText = 'دخول آمن';
+      loginBtn.disabled = false;
     }
   };
 
-  function proceedToDashboard() {
+  // دالة فتح الداشبورد
+  window.proceedToDashboard = function() {
       currentWarehouse = selectedWhId;
       document.getElementById('headerWhName').innerText = selectedWhName;
       document.getElementById('splash').classList.add('exit');
