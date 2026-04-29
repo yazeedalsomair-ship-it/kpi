@@ -233,13 +233,14 @@ td{padding:9px;border-bottom:1px solid var(--gray-100);text-align:right}
   let CHARTS = {};
   let selectedWhId = '';
   let selectedWhName = '';
+  let selectedWhEn = '';
   let currentWarehouse = '';
 
-  // --- دوال تسجيل الدخول ---
   window.selectWarehouse = function(id, nameAr, nameEn) {
-    selectedWhId = id; selectedWhName = nameAr;
+    selectedWhId = id; selectedWhName = nameAr; selectedWhEn = nameEn;
     document.getElementById('loginSubtitle').innerText = "بيانات مشرف " + nameAr;
     document.getElementById('loginModal').style.display = 'flex';
+    document.getElementById('loginError').style.display = 'none';
   }
 
   window.closeLogin = function() { document.getElementById('loginModal').style.display = 'none'; }
@@ -260,20 +261,32 @@ td{padding:9px;border-bottom:1px solid var(--gray-100);text-align:right}
         if (!allowedEmails.includes(email.trim().toLowerCase())) throw new Error("unauth");
       }
       await signInWithEmailAndPassword(auth, email, password);
+      
       document.getElementById('loginModal').style.display = 'none';
+      document.getElementById('passwordInput').value = ''; 
       proceedToDashboard();
     } catch (e) {
-      errorEl.innerText = "غير مصرح لك بالدخول أو البيانات خاطئة";
+      errorEl.innerText = e.message === "unauth" ? "حسابك غير مصرح لهذا المستودع" : "بيانات الدخول خاطئة!";
       errorEl.style.display = 'block';
     } finally {
       btn.innerText = 'دخول آمن'; btn.disabled = false;
     }
   }
 
-  // --- دوال البيانات ---
+  window.goBack = function() {
+    document.getElementById('app').classList.remove('active');
+    setTimeout(() => { document.getElementById('app').style.display = 'none'; }, 500);
+    document.getElementById('splash').style.display = 'flex';
+    document.getElementById('splash').classList.remove('exit');
+    PARSED = {}; Object.keys(CHARTS).forEach(k=>{CHARTS[k].destroy();delete CHARTS[k];});
+  }
+
   async function proceedToDashboard() {
     currentWarehouse = selectedWhId;
     document.getElementById('headerWhName').innerHTML = 'مستودع <span>' + selectedWhName.replace('مستودع ', '') + '</span>';
+    document.getElementById('alulaTitle').textContent = selectedWhEn + ' Dispatched';
+    document.getElementById('tabAlula').innerHTML = '🚚 ' + selectedWhEn;
+    
     document.getElementById('splash').classList.add('exit');
     setTimeout(() => {
       document.getElementById('splash').style.display = 'none';
@@ -282,99 +295,109 @@ td{padding:9px;border-bottom:1px solid var(--gray-100);text-align:right}
     }, 700);
 
     // سحب البيانات من السحابة
-    const docRef = doc(db, "warehouses", currentWarehouse);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists() && docSnap.data().dashboardData) {
-      PARSED = docSnap.data().dashboardData;
-      updateStatus();
-      buildDash(); // تشغيل محرك العرض
-    }
+    document.getElementById('statusTxt').innerHTML = 'جاري جلب البيانات من السحابة...';
+    try {
+      const docRef = doc(db, "warehouses", currentWarehouse);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists() && docSnap.data().dashboardData) {
+        PARSED = docSnap.data().dashboardData;
+        updateStatus();
+        buildDash();
+        // إظهار أسماء الملفات المحفوظة
+        if(PARSED.madinah_2025) document.getElementById('fi-info-madinah-2025').classList.add('show');
+        if(PARSED.madinah_2026) document.getElementById('fi-info-madinah-2026').classList.add('show');
+        if(PARSED.alula_2025) document.getElementById('fi-info-alula-2025').classList.add('show');
+        if(PARSED.alula_2026) document.getElementById('fi-info-alula-2026').classList.add('show');
+        if(PARSED.asn) document.getElementById('fi-info-asn').classList.add('show');
+        if(PARSED.outbound) document.getElementById('fi-info-outbound').classList.add('show');
+      } else {
+        updateStatus();
+      }
+    } catch(e) { console.error(e); }
   }
 
-  // دالة الحفظ التلقائي
   async function saveToCloud() {
-    const docRef = doc(db, "warehouses", currentWarehouse);
-    await setDoc(docRef, { dashboardData: PARSED }, { merge: true });
-    document.getElementById('statusTxt').innerHTML = '<strong>✅ تم التحديث في السحابة</strong>';
+    if(!currentWarehouse) return;
+    try {
+      const docRef = doc(db, "warehouses", currentWarehouse);
+      await setDoc(docRef, { dashboardData: PARSED }, { merge: true });
+      document.getElementById('statusTxt').innerHTML = '<strong style="color:var(--green)">✅ تمت مزامنة البيانات السحابية</strong>';
+    } catch(e) { console.error(e); }
   }
 
-  // --- محرك العرض (المخططات والجداول) ---
-  function buildDash() {
-    const dm = getMergedParsed('madinah'), da = getMergedParsed('alula'), ds = PARSED.asn, dob = PARSED.outbound;
-    document.getElementById('dash').style.display = 'block';
+  // ══════════════════════════════════════════════════════════════
+  // EXCEL PARSING LOGIC (من كودك الأصلي بالكامل)
+  // ══════════════════════════════════════════════════════════════
+  const MONTH_NAMES=new Set(['January','February','March','April','May','June','July','August','September','October','November','December']);
+  const MO={January:1,February:2,March:3,April:4,May:5,June:6,July:7,August:8,September:9,October:10,November:11,December:12};
 
-    // 1. بناء نظرة عامة
-    buildOV(dm, da, ds);
-    
-    // 2. بناء الألواح التفصيلية (استدعاء الدوال الأصلية)
-    if(dm) buildPanel('madinah', dm, '#0F6E56', 'طلبات', 'لاينات');
-    if(da) buildPanel('alula', da, '#6B1D4A', 'طلبات', 'لاينات');
-    // يمكنك إضافة دوال ASN و Outbound هنا بنفس الطريقة
-  }
-
-  function buildOV(dm, da, ds) {
-    const el = document.getElementById('panel-ov');
-    const card = (data, label, color) => data ? `<div class="kpi" style="border-right-color:${color}"><div class="kpi-lbl">${label}</div><div class="kpi-val">${Number(data.totals.orders).toLocaleString()}</div></div>` : '';
-    el.innerHTML = `<div class="kpi-row">${card(dm, 'MADINAH', '#0F6E56')}${card(da, 'DISPATCHED', '#6B1D4A')}</div><div class="sec">مقارنة البيانات</div>`;
-    // هنا يتم بناء الجدول الشهري للمقارنة كما في كودك الأول
-  }
-
-  function buildPanel(key, data, color, oLbl, lLbl) {
-    const el = document.getElementById('panel-' + key);
-    const t = data.totals;
-    el.innerHTML = `
-      <div class="kpi-row">
-        <div class="kpi" style="border-right-color:${color}"><div class="kpi-lbl">${oLbl}</div><div class="kpi-val">${Number(t.orders).toLocaleString()}</div></div>
-        <div class="kpi" style="border-right-color:${color}"><div class="kpi-lbl">${lLbl}</div><div class="kpi-val">${Number(t.lines).toLocaleString()}</div></div>
-      </div>
-      <div class="chart-row">
-        <div class="chart-box"><div class="chart-wrap"><canvas id="c1-${key}"></canvas></div></div>
-        <div class="chart-box"><div class="chart-wrap"><canvas id="c2-${key}"></canvas></div></div>
-      </div>`;
-    
-    // رسم المخططات باستخدام Chart.js
-    renderCharts(key, data, color);
-  }
-
-  function renderCharts(key, data, color) {
-    const labels = data.monthly.map(m => m.month);
-    new Chart(document.getElementById(`c1-${key}`), {
-      type: 'bar',
-      data: { labels, datasets: [{ label: 'الطلبات', data: data.monthly.map(m => m.orders), backgroundColor: color }] },
-      options: { responsive: true, maintainAspectRatio: false }
-    });
-    new Chart(document.getElementById(`c2-${key}`), {
-      type: 'line',
-      data: { labels, datasets: [{ label: 'الكمية', data: data.monthly.map(m => m.qty), borderColor: color, fill: false }] },
-      options: { responsive: true, maintainAspectRatio: false }
-    });
-  }
-
-  // دوال التحليل المساعدة (Helpers)
-  function getMergedParsed(key) {
-    const p25 = PARSED[key+'_2025'], p26 = PARSED[key+'_2026'];
-    if(!p25 && !p26) return null;
-    return p26 || p25; // للتجربة سنعيد أحد الملفين
-  }
-
-  function updateStatus() {
-    const hasM=PARSED.madinah_2025||PARSED.madinah_2026, hasA=PARSED.alula_2025||PARSED.alula_2026;
-    document.getElementById('dot-madinah').className='dot'+(hasM?' on-m':'');
-    document.getElementById('dot-alula').className='dot'+(hasA?' on-a':'');
-  }
-
-  // ربط دوال الرفع بزر الـ HTML
   window.loadFile = function(file, key, yr) {
+    if(!file) return;
+    const nameId = 'fi-name-' + ((key==='asn'||key==='outbound') ? key : key+'-'+yr);
+    const slotId = 'fi-info-' + ((key==='asn'||key==='outbound') ? key : key+'-'+yr);
+    document.getElementById(nameId).textContent = file.name;
+    document.getElementById(slotId).classList.add('show');
+    document.getElementById('statusTxt').innerText = 'جاري التحليل...';
+
     const reader = new FileReader();
     reader.onload = e => {
-      const wb = XLSX.read(e.target.result, {type:'array'});
-      // هنا تضع منطق الـ parse الخاص بك (parseMadinah الخ)
-      // PARSED[pkey] = ...
-      saveToCloud(); // حفظ في السحابة فوراً
-      buildDash();
+      try {
+        const wb = XLSX.read(e.target.result, {type:'array', cellDates:true});
+        const pkey = (key==='asn'||key==='outbound') ? key : key+'_'+yr;
+        if(key==='madinah') PARSED[pkey] = parseMadinah(wb, yr);
+        else if(key==='alula') PARSED[pkey] = parseAlula(wb, yr);
+        else if(key==='asn') PARSED.asn = parseASN(wb);
+        else if(key==='outbound') PARSED.outbound = parseOutbound(wb);
+        updateStatus(); buildDash(); saveToCloud();
+      } catch(err) { console.error(err); alert("خطأ في قراءة الملف"); }
     };
     reader.readAsArrayBuffer(file);
   }
+
+  window.removeFile = function(key, yr) {
+    const pkey = (key==='asn'||key==='outbound') ? key : key+'_'+yr;
+    delete PARSED[pkey];
+    document.getElementById('fi-info-' + ((key==='asn'||key==='outbound') ? key : key+'-'+yr)).classList.remove('show');
+    updateStatus(); buildDash(); saveToCloud();
+  }
+
+  const r1=v=>Math.round(v*10)/10;
+  const fmt=(v,d=0)=>Number(v||0).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+  function parseDate(v){if(!v)return null;if(v instanceof Date&&!isNaN(v))return v;const s=String(v).trim();const m1=s.match(/\w+\s+(\w+)\s+(\d+)\s+[\d:]+\s+\w+\s+(\d{4})/);if(m1)return new Date(`${m1[1]} ${m1[2]} ${m1[3]}`);const m2=s.match(/^(\d{1,2})[-\.\/](\d{1,2})[-\.\/](\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);if(m2){const[,dd,mm,yyyy,hh='0',mi='0',ss='0']=m2;return new Date(+yyyy,+mm-1,+dd,+hh,+mi,+ss)}const d=new Date(s);return isNaN(d)?null:d}
+  function workDaysInMonth(year,month){const mo=MO[month];if(!mo)return 26;const days=new Date(year,mo,0).getDate();let c=0;for(let d=1;d<=days;d++)if(new Date(year,mo-1,d).getDay()!==5)c++;return c}
+  function buildStatsBySheet(bySheet){const monthly=bySheet.map(s=>{const yr=s.year;const days=workDaysInMonth(yr,s.month);const ord=s.orders.size,ln=Math.round(s.lines),qty=Math.round(s.qty);return{month:s.month,year:yr,mo:MO[s.month]||99,days,orders:ord,lines:ln,qty,avgOrd:r1(ord/days),avgLines:r1(ln/days),avgQty:r1(qty/days)}}).sort((a,b)=>a.year!==b.year?a.year-b.year:a.mo-b.mo);const td=monthly.reduce((s,m)=>s+m.days,0)||1;const totO=monthly.reduce((s,m)=>s+m.orders,0);const totL=monthly.reduce((s,m)=>s+m.lines,0);const totQ=monthly.reduce((s,m)=>s+m.qty,0);return{monthly,totals:{orders:totO,lines:totL,qty:totQ,days:td,avgOrd:r1(totO/td),avgLines:r1(totL/td),avgQty:r1(totQ/td)}}}
+
+  function parseMadinah(wb,fileYear){const bySheet=[];for(const sn of wb.SheetNames){const month=sn.trim();if(!MONTH_NAMES.has(month))continue;let raw=XLSX.utils.sheet_to_json(wb.Sheets[sn],{defval:'',header:1});let hi=0;for(let i=0;i<Math.min(5,raw.length);i++){const v=raw[i].map(c=>String(c).toLowerCase());if(v.some(x=>x.includes('order'))&&v.some(x=>x.includes('qty'))){hi=i;break}}const data=XLSX.utils.sheet_to_json(wb.Sheets[sn],{defval:'',range:hi});if(!data.length)continue;const allKeys=Object.keys(data[0]);const colOrder=allKeys.find(k=>/order.?(no|num)/i.test(k));const colQty=allKeys.find(k=>/total.?qty/i.test(k));if(!colOrder||!colQty)continue;const orders=new Set();let lines=0,qty=0;for(const row of data){const q=parseFloat(String(row[colQty]||'').replace(/,/g,''))||0;const ord=String(row[colOrder]||'').trim();if(!q||!ord||!/\d/.test(ord))continue;orders.add(ord);lines++;qty+=q}if(orders.size)bySheet.push({month,year:fileYear,orders,lines,qty})}return buildStatsBySheet(bySheet)}
+  function parseAlula(wb,fileYear){const bySheet=[];for(const sn of wb.SheetNames){const month=sn.trim();if(!MONTH_NAMES.has(month))continue;let raw=XLSX.utils.sheet_to_json(wb.Sheets[sn],{defval:'',header:1});let hi=0;for(let i=0;i<Math.min(5,raw.length);i++){const v=raw[i].map(c=>String(c).toLowerCase());if(v.some(x=>x.includes('order'))&&v.some(x=>x.includes('dispatch'))){hi=i;break}}const data=XLSX.utils.sheet_to_json(wb.Sheets[sn],{defval:'',range:hi});if(!data.length)continue;const allKeys=Object.keys(data[0]);const colOrder=allKeys.find(k=>/order.?(no|num|number)/i.test(k));const colQty=allKeys.find(k=>/dispatched.?qty/i.test(k));const colLines=allKeys.find(k=>/order.?line/i.test(k));if(!colOrder||!colQty)continue;const orders=new Set();let lines=0,qty=0;for(const row of data){const q=parseFloat(String(row[colQty]||'').replace(/,/g,''))||0;const ord=String(row[colOrder]||'').trim();const ln=parseFloat(row[colLines]||1)||1;if(!q||!ord||!/\d/.test(ord))continue;orders.add(ord);lines+=ln;qty+=q}if(orders.size)bySheet.push({month,year:fileYear,orders,lines,qty})}return buildStatsBySheet(bySheet)}
+  function parseASN(wb){const trkMap={};for(const sn of wb.SheetNames){const data=XLSX.utils.sheet_to_json(wb.Sheets[sn],{defval:''});if(!data.length)continue;const sk=Object.keys(data[0]).map(k=>k.toLowerCase()).join(' ');if(!sk.includes('inbound')&&!sk.includes('received'))continue;for(const row of data){const gv=keys=>{const f=Object.keys(row).find(k=>keys.some(kk=>k.toLowerCase().includes(kk)));return f?row[f]:''};if(String(gv(['status'])||'').trim()!=='Closed')continue;const trk=String(gv(['inbound shipment'])||'').trim();if(!trk)continue;const d=parseDate(gv(['received date']));const qty=parseFloat(gv(['received qty'])||0)||0;const poLine=parseFloat(gv(['po line number'])||0)||0;if(!d)continue;if(!trkMap[trk])trkMap[trk]={trk,date:d,qty:0,lines:new Set()};else if(d<trkMap[trk].date)trkMap[trk].date=d;trkMap[trk].qty+=qty;if(poLine)trkMap[trk].lines.add(poLine)}}const rows=Object.values(trkMap).map(r=>({date:r.date,month:r.date.toLocaleString('en-US',{month:'long'}),year:r.date.getFullYear(),orderNo:r.trk,lines:r.lines.size||1,qty:r.qty}));const byM={};for(const r of rows){const k=r.year+'_'+r.month;if(!byM[k])byM[k]={month:r.month,year:r.year,mo:MO[r.month]||99,orders:new Set(),lines:0,qty:0};byM[k].orders.add(r.orderNo);byM[k].lines+=r.lines;byM[k].qty+=r.qty}const monthly=Object.values(byM).map(m=>{const days=workDaysInMonth(m.year,m.month);const ord=m.orders.size,ln=Math.round(m.lines),qty=Math.round(m.qty);return{month:m.month,year:m.year,mo:m.mo,days,orders:ord,lines:ln,qty,avgOrd:r1(ord/days),avgLines:r1(ln/days),avgQty:r1(qty/days)}}).sort((a,b)=>a.year!==b.year?a.year-b.year:a.mo-b.mo);const td=monthly.reduce((s,m)=>s+m.days,0)||1;const totO=monthly.reduce((s,m)=>s+m.orders,0);const totL=monthly.reduce((s,m)=>s+m.lines,0);const totQ=monthly.reduce((s,m)=>s+m.qty,0);return{monthly,totals:{orders:totO,lines:totL,qty:totQ,days:td,avgOrd:r1(totO/td),avgLines:r1(totL/td),avgQty:r1(totQ/td)}}}
+  function parseOutbound(wb){const sn=wb.SheetNames[0];const data=XLSX.utils.sheet_to_json(wb.Sheets[sn],{defval:''});if(!data.length)return null;const byM={};const cancelByM={};for(const row of data){const gv=k=>{const f=Object.keys(row).find(x=>x.trim()===k);return f?row[f]:''};const status=String(gv('Status')).trim();const d=parseDate(gv('Order Create Date'));if(!d)continue;const month=d.toLocaleString('en-US',{month:'long'});const year=d.getFullYear();const k=year+'_'+month;if(status==='Cancelled'){if(!cancelByM[k])cancelByM[k]={month,year,mo:MO[month]||99,count:0};cancelByM[k].count++;continue}if(status!=='Dispatched')continue;const staged=parseDate(gv('Staged Date'));const pStart=parseDate(gv('Picking Start Date'));const pEnd=parseDate(gv('Picking Completed Date'));const durCS=staged&&d&&staged>d?(staged-d)/60000:null;const durPick=pStart&&pEnd&&pEnd>pStart?(pEnd-pStart)/60000:null;const ordQty=parseFloat(gv('Ordered Qty'))||0;const picQty=parseFloat(gv('Picked Qty'))||0;const shQty=parseFloat(gv('Short Qty'))||0;const disQty=parseFloat(gv('Dispatched Qty'))||0;const isRush=String(gv('Rush order')).trim().toUpperCase()==='YES';if(!byM[k])byM[k]={month,year,mo:MO[month]||99,orders:0,rush:0,ordQty:0,picQty:0,shQty:0,disQty:0,durCS:[],durPick:[],rushDurCS:[],rushDurPick:[]};byM[k].orders++;if(isRush){byM[k].rush++;if(durCS!==null)byM[k].rushDurCS.push(durCS);if(durPick!==null)byM[k].rushDurPick.push(durPick)}byM[k].ordQty+=ordQty;byM[k].picQty+=picQty;byM[k].shQty+=shQty;byM[k].disQty+=disQty;if(durCS!==null)byM[k].durCS.push(durCS);if(durPick!==null)byM[k].durPick.push(durPick)}function median(arr){if(!arr.length)return 0;const s=[...arr].sort((a,b)=>a-b);const m=Math.floor(s.length/2);return r1(s.length%2?s[m]:(s[m-1]+s[m])/2)}const monthly=Object.values(byM).map(m=>{const avgCS=m.durCS.length?r1(m.durCS.reduce((a,b)=>a+b,0)/m.durCS.length/60):0;const avgPick=m.durPick.length?r1(m.durPick.reduce((a,b)=>a+b,0)/m.durPick.length/60):0;const medCS=r1(median(m.durCS)/60);const medPick=r1(median(m.durPick)/60);const rushAvgCS=m.rushDurCS.length?r1(m.rushDurCS.reduce((a,b)=>a+b,0)/m.rushDurCS.length/60):0;const rushAvgPick=m.rushDurPick.length?r1(m.rushDurPick.reduce((a,b)=>a+b,0)/m.rushDurPick.length/60):0;const rushMedCS=r1(median(m.rushDurCS)/60);const rushMedPick=r1(median(m.rushDurPick)/60);return{month:m.month,year:m.year,mo:m.mo,orders:m.orders,rush:m.rush,ordQty:Math.round(m.ordQty),picQty:Math.round(m.picQty),shQty:Math.round(m.shQty),disQty:Math.round(m.disQty),avgCS,avgPick,medCS,medPick,rushAvgCS,rushAvgPick,rushMedCS,rushMedPick}}).sort((a,b)=>a.year!==b.year?a.year-b.year:a.mo-b.mo);const totOrders=monthly.reduce((s,m)=>s+m.orders,0);const totRush=monthly.reduce((s,m)=>s+m.rush,0);const totOQ=monthly.reduce((s,m)=>s+m.ordQty,0);const totPQ=monthly.reduce((s,m)=>s+m.picQty,0);const totSQ=monthly.reduce((s,m)=>s+m.shQty,0);const totDQ=monthly.reduce((s,m)=>s+m.disQty,0);const allCS=Object.values(byM).flatMap(m=>m.durCS);const allPick=Object.values(byM).flatMap(m=>m.durPick);const allRushCS=Object.values(byM).flatMap(m=>m.rushDurCS);const allRushPick=Object.values(byM).flatMap(m=>m.rushDurPick);const cancelledMonthly=Object.values(cancelByM).sort((a,b)=>a.year!==b.year?a.year-b.year:a.mo-b.mo);const totCancelled=cancelledMonthly.reduce((s,m)=>s+m.count,0);return{monthly,totals:{orders:totOrders,rush:totRush,cancelled:totCancelled,ordQty:totOQ,picQty:totPQ,shQty:totSQ,disQty:totDQ,avgCS:allCS.length?r1(allCS.reduce((a,b)=>a+b,0)/allCS.length/60):0,avgPick:allPick.length?r1(allPick.reduce((a,b)=>a+b,0)/allPick.length/60):0,medCS:r1(median(allCS)/60),medPick:r1(median(allPick)/60),rushAvgCS:allRushCS.length?r1(allRushCS.reduce((a,b)=>a+b,0)/allRushCS.length/60):0,rushAvgPick:allRushPick.length?r1(allRushPick.reduce((a,b)=>a+b,0)/allRushPick.length/60):0,rushMedCS:r1(median(allRushCS)/60),rushMedPick:r1(median(allRushPick)/60)},cancelledMonthly}}
+
+  // ══════════════════════════════════════════════════════════════
+  // UI BUILDERS (من كودك الأصلي بالكامل)
+  // ══════════════════════════════════════════════════════════════
+  function getMergedParsed(key){const p25=PARSED[key+'_2025'],p26=PARSED[key+'_2026'];if(!p25&&!p26)return null;if(p25&&!p26)return p25;if(!p25&&p26)return p26;const monthly=[...p25.monthly,...p26.monthly].sort((a,b)=>a.year!==b.year?a.year-b.year:a.mo-b.mo);const td=monthly.reduce((s,m)=>s+m.days,0)||1;const totO=monthly.reduce((s,m)=>s+m.orders,0);const totL=monthly.reduce((s,m)=>s+m.lines,0);const totQ=monthly.reduce((s,m)=>s+m.qty,0);return{monthly,totals:{orders:totO,lines:totL,qty:totQ,days:td,avgOrd:r1(totO/td),avgLines:r1(totL/td),avgQty:r1(totQ/td)}};}
+  window.showTab = function(name,el){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));el.classList.add('on');document.getElementById('panel-'+name).classList.add('on');}
+  function getCC(){return{tc:'rgba(45,13,31,0.5)',gc:'rgba(107,29,74,0.06)'}}
+
+  function updateStatus(){
+    const hasM=PARSED.madinah_2025||PARSED.madinah_2026,hasA=PARSED.alula_2025||PARSED.alula_2026,hasS=PARSED.asn,hasOB=PARSED.outbound;
+    const n=[hasM,hasA,hasS,hasOB].filter(Boolean).length;
+    document.getElementById('dot-madinah').className='dot'+(hasM?' on-m':'');
+    document.getElementById('dot-alula').className='dot'+(hasA?' on-a':'');
+    document.getElementById('dot-asn').className='dot'+(hasS?' on-s':'');
+    document.getElementById('dot-outbound').className='dot'+(hasOB?' on-ob':'');
+    document.getElementById('statusTxt').innerHTML=`<strong>${n}</strong> مصادر جاهزة للاستعراض.`;
+  }
+
+  function buildDash(){const dm=getMergedParsed('madinah');const da=getMergedParsed('alula');const ds=PARSED.asn;const dob=PARSED.outbound;const any=dm||da||ds||dob;document.getElementById('dash').style.display=any?'block':'none';if(!any)return;buildOV(dm,da,ds);buildPanel('madinah',dm,'#0F6E56','طلبات','لاينات',false);buildPanel('alula',da,'#6B1D4A','طلبات','لاينات',false);buildPanel('asn',ds,'#6C3483','TRK','PO Lines',true);buildOutboundPanel(dob);buildRushPanel(dob)}
+
+  function buildOV(dm,da,ds){const el=document.getElementById('panel-ov');function card(data,icon,label,color){if(!data)return`<div class="kpi"><div class="kpi-lbl">${icon} ${label}</div><div style="color:var(--gray-300);font-size:0.8rem;margin-top:10px">لم يُرفع بعد</div></div>`;const t=data.totals,ul=label.includes('ASN')?'TRK':'طلب';return`<div class="kpi"><div class="kpi-lbl" style="color:${color}">${icon} ${label}</div><div class="kpi-val" style="color:${color}">${fmt(t.orders)}</div><div class="kpi-avg">متوسط <span>${fmt(t.avgOrd,1)}</span> ${ul}/يوم</div><div style="font-size:0.72rem;color:var(--gray-600);margin-top:4px">Lines: ${fmt(t.lines)} · QTY: ${fmt(t.qty)}</div></div>`}const all=[dm,da,ds].filter(Boolean);const allP=[...new Set(all.flatMap(d=>d.monthly.map(m=>m.year+'_'+m.month)))].sort((a,b)=>{const[ay,am]=a.split('_');const[by,bm]=b.split('_');return ay!==by?ay-by:(MO[am]||0)-(MO[bm]||0)});const trows=allP.map(p=>{const[yr,mo]=p.split('_'),y=parseInt(yr);const am=dm?.monthly.find(x=>x.year==yr&&x.month===mo);const al=da?.monthly.find(x=>x.year==yr&&x.month===mo);const as=ds?.monthly.find(x=>x.year==yr&&x.month===mo);return`<tr class="${y===2025?'yr25':'yr26'}"><td>${mo}</td><td>${am?fmt(am.orders):'—'}</td><td class="avg-td">${am?fmt(am.avgOrd,1):'—'}</td><td>${am?fmt(am.qty):'—'}</td><td>${al?fmt(al.orders):'—'}</td><td class="avg-td">${al?fmt(al.avgOrd,1):'—'}</td><td>${al?fmt(al.qty):'—'}</td><td>${as?fmt(as.orders):'—'}</td><td class="avg-td">${as?fmt(as.avgOrd,1):'—'}</td><td>${as?fmt(as.qty):'—'}</td></tr>`}).join('');el.innerHTML=`<div class="kpi-row" style="grid-template-columns:repeat(3,minmax(0,1fr))">${card(dm,'📦','MADINAH Received','#0F6E56')}${card(da,'🚚','Dispatched','#6B1D4A')}${card(ds,'🏭','ASN Receipts','#6C3483')}</div><div class="sec">مقارنة شهرية</div><div class="tw"><table><thead><tr><th>الشهر</th><th style="background:#0F6E56">MAD طلبات</th><th style="background:#0F6E56">متوسط/يوم</th><th style="background:#0F6E56">QTY</th><th style="background:#6B1D4A">طلبات</th><th style="background:#6B1D4A">متوسط/يوم</th><th style="background:#6B1D4A">QTY</th><th style="background:#6C3483">ASN TRK</th><th style="background:#6C3483">متوسط/يوم</th><th style="background:#6C3483">Recv QTY</th></tr></thead><tbody>${trows||'<tr><td colspan="10" style="text-align:center;color:var(--gray-300);padding:30px">ارفع ملفاً على الأقل</td></tr>'}</tbody></table></div>`}
+
+  function buildPanel(key,data,color,oLbl,lLbl,isASN){const el=document.getElementById('panel-'+key);if(!data){el.innerHTML=`<div class="empty"><div class="empty-icon">📂</div><p>لم يُرفع ملف بعد</p></div>`;return}const t=data.totals;const note=isASN?`<div class="note">كل TRK = طلب واحد بدون تكرار · Status = Closed فقط · ${fmt(t.orders)} TRK فريدة</div>`:'';const mrows=data.monthly.map(m=>`<tr class="${m.year===2025?'yr25':'yr26'}"><td>${m.month}</td><td>${m.days}</td><td>${fmt(m.orders)}</td><td class="avg-td">${fmt(m.avgOrd,1)}</td><td>${fmt(m.lines)}</td><td class="avg-td">${fmt(m.avgLines,1)}</td><td>${fmt(m.qty)}</td><td class="avg-td">${fmt(m.avgQty,1)}</td></tr>`).join('');const tot=`<tr class="tr-tot"><td>الإجمالي</td><td>${t.days}</td><td>${fmt(t.orders)}</td><td class="avg-td">${fmt(t.avgOrd,1)}</td><td>${fmt(t.lines)}</td><td class="avg-td">${fmt(t.avgLines,1)}</td><td>${fmt(t.qty)}</td><td class="avg-td">${fmt(t.avgQty,1)}</td></tr>`;el.innerHTML=`${note}<div class="kpi-row"><div class="kpi"><div class="kpi-lbl">${oLbl}</div><div class="kpi-val" style="color:${color}">${fmt(t.orders)}</div><div class="kpi-avg">متوسط <span>${fmt(t.avgOrd,1)}</span>/يوم</div></div><div class="kpi"><div class="kpi-lbl">${lLbl}</div><div class="kpi-val" style="color:${color}">${fmt(t.lines)}</div><div class="kpi-avg">متوسط <span>${fmt(t.avgLines,1)}</span>/يوم</div></div><div class="kpi"><div class="kpi-lbl">${isASN?'Received QTY':'إجمالي QTY'}</div><div class="kpi-val" style="color:${color}">${fmt(t.qty)}</div><div class="kpi-avg">متوسط <span>${fmt(t.avgQty,1)}</span>/يوم</div></div><div class="kpi"><div class="kpi-lbl">أيام عمل</div><div class="kpi-val" style="color:${color}">${t.days}</div></div></div><div class="sec">تفصيل شهري</div><div class="tw"><table><thead><tr><th>الشهر</th><th>أيام</th><th>${oLbl}</th><th>متوسط/يوم</th><th>${lLbl}</th><th>متوسط/يوم</th><th>QTY</th><th>متوسط/يوم</th></tr></thead><tbody>${mrows}${tot}</tbody></table></div><div class="chart-row"><div class="chart-box"><h4>${oLbl} + متوسط/يوم</h4><div class="legend"><span><span class="lsq" style="background:${color}"></span>${oLbl}</span><span><span class="lsq" style="background:#E74C3C"></span>متوسط/يوم</span></div><div class="chart-wrap"><canvas id="c1-${key}"></canvas></div></div><div class="chart-box"><h4>QTY + متوسط/يوم</h4><div class="legend"><span><span class="lsq" style="background:${color}"></span>QTY</span><span><span class="lsq" style="background:#E74C3C"></span>متوسط/يوم</span></div><div class="chart-wrap"><canvas id="c2-${key}"></canvas></div></div></div>`;['c1-'+key,'c2-'+key].forEach(id=>{if(CHARTS[id]){CHARTS[id].destroy();delete CHARTS[id]}});const labels=data.monthly.map(m=>m.month.slice(0,3)+" '"+String(m.year).slice(2));const{tc,gc}=getCC();const bc=data.monthly.map(m=>m.year===2025?color+'BB':color);CHARTS['c1-'+key]=new Chart(document.getElementById('c1-'+key),{type:'bar',data:{labels,datasets:[{data:data.monthly.map(m=>m.orders),backgroundColor:bc,borderRadius:4,yAxisID:'y'},{data:data.monthly.map(m=>m.avgOrd),type:'line',borderColor:'#E74C3C',backgroundColor:'transparent',borderWidth:2,pointRadius:3,pointBackgroundColor:'#E74C3C',yAxisID:'y2',tension:.3,borderDash:[4,3]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{color:tc},grid:{color:gc},position:'right'},y2:{ticks:{color:'#E74C3C',font:{size:10}},grid:{display:false},position:'left'},x:{ticks:{color:tc,autoSkip:false,maxRotation:40,font:{size:10}},grid:{color:gc}}}}});CHARTS['c2-'+key]=new Chart(document.getElementById('c2-'+key),{type:'bar',data:{labels,datasets:[{data:data.monthly.map(m=>m.qty),backgroundColor:bc.map(c=>c+'88'),borderRadius:4,yAxisID:'y'},{data:data.monthly.map(m=>m.avgQty),type:'line',borderColor:'#E74C3C',backgroundColor:'transparent',borderWidth:2,pointRadius:3,pointBackgroundColor:'#E74C3C',yAxisID:'y2',tension:.3,borderDash:[4,3]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{color:tc,callback:v=>v>=1000?(v/1000).toFixed(0)+'K':v},grid:{color:gc},position:'right'},y2:{ticks:{color:'#E74C3C',font:{size:10},callback:v=>v>=1000?(v/1000).toFixed(0)+'K':v},grid:{display:false},position:'left'},x:{ticks:{color:tc,autoSkip:false,maxRotation:40,font:{size:10}},grid:{color:gc}}}}})}
+
+  function buildOutboundPanel(data){const el=document.getElementById('panel-outbound');const C='#B8923A';if(!data){el.innerHTML=`<div class="empty"><div class="empty-icon">📂</div><p>لم يُرفع الملف بعد</p></div>`;return}const t=data.totals;const mrows=data.monthly.map(m=>`<tr class="${m.year===2025?'yr25':'yr26'}"><td>${m.month}</td><td>${fmt(m.orders)}</td><td style="color:#C0392B;font-weight:700">${fmt(m.rush)}</td><td>${fmt(m.ordQty)}</td><td>${fmt(m.picQty)}</td><td style="color:#C0392B">${fmt(m.shQty)}</td><td>${fmt(m.disQty)}</td><td class="avg-td">${fmt(m.avgCS,1)}</td><td style="color:#0F6E56;font-weight:700">${fmt(m.medCS,1)}</td><td class="avg-td">${fmt(m.avgPick,1)}</td><td style="color:#0F6E56;font-weight:700">${fmt(m.medPick,1)}</td></tr>`).join('');const tot=`<tr class="tr-tot"><td>الإجمالي</td><td>${fmt(t.orders)}</td><td style="color:#C0392B;font-weight:800">${fmt(t.rush)}</td><td>${fmt(t.ordQty)}</td><td>${fmt(t.picQty)}</td><td>${fmt(t.shQty)}</td><td>${fmt(t.disQty)}</td><td class="avg-td">${fmt(t.avgCS,1)}</td><td style="color:#0F6E56;font-weight:800">${fmt(t.medCS,1)}</td><td class="avg-td">${fmt(t.avgPick,1)}</td><td style="color:#0F6E56;font-weight:800">${fmt(t.medPick,1)}</td></tr>`;el.innerHTML=`<div class="note">المدة الزمنية بالساعات · <b>Create→Staged</b> = من إنشاء الطلب حتى التجهيز · <b>Picking</b> = من بدء الـ Picking حتى اكتماله</div><div class="kpi-row"><div class="kpi"><div class="kpi-lbl">إجمالي الطلبات</div><div class="kpi-val" style="color:${C}">${fmt(t.orders)}</div></div><div class="kpi"><div class="kpi-lbl">Rush Orders</div><div class="kpi-val" style="color:#C0392B">${fmt(t.rush)}</div><div class="kpi-avg">${r1(t.orders?t.rush/t.orders*100:0)}%</div></div><div class="kpi"><div class="kpi-lbl">Cancelled</div><div class="kpi-val" style="color:#6B6B6B">${fmt(t.cancelled)}</div></div><div class="kpi"><div class="kpi-lbl">Ordered QTY</div><div class="kpi-val" style="color:${C}">${fmt(t.ordQty)}</div></div><div class="kpi"><div class="kpi-lbl">Picked QTY</div><div class="kpi-val" style="color:${C}">${fmt(t.picQty)}</div></div><div class="kpi"><div class="kpi-lbl">Short QTY</div><div class="kpi-val" style="color:#C0392B">${fmt(t.shQty)}</div></div><div class="kpi"><div class="kpi-lbl">Dispatched QTY</div><div class="kpi-val" style="color:${C}">${fmt(t.disQty)}</div></div><div class="kpi"><div class="kpi-lbl">Mean CS</div><div class="kpi-val" style="color:${C}">${fmt(t.avgCS,1)}</div><div class="kpi-avg">ساعة</div></div><div class="kpi"><div class="kpi-lbl">Median CS</div><div class="kpi-val" style="color:#0F6E56">${fmt(t.medCS,1)}</div><div class="kpi-avg">ساعة</div></div><div class="kpi"><div class="kpi-lbl">Mean Pick</div><div class="kpi-val" style="color:${C}">${fmt(t.avgPick,1)}</div><div class="kpi-avg">ساعة</div></div><div class="kpi"><div class="kpi-lbl">Median Pick</div><div class="kpi-val" style="color:#0F6E56">${fmt(t.medPick,1)}</div><div class="kpi-avg">ساعة</div></div></div><div class="sec">تفصيل شهري</div><div class="tw"><table><thead><tr><th>الشهر</th><th>الطلبات</th><th style="background:#922B21">Rush</th><th>Ordered</th><th>Picked</th><th style="background:#922B21">Short</th><th>Dispatched</th><th>Avg CS</th><th style="background:#0F6E56">Med CS</th><th>Avg Pick</th><th style="background:#0F6E56">Med Pick</th></tr></thead><tbody>${mrows}${tot}</tbody></table></div><div class="sec">Cancelled</div><div class="tw"><table><thead><tr><th>الشهر</th><th style="background:#5F5E5A">عدد</th></tr></thead><tbody>${(data.cancelledMonthly||[]).map(m=>`<tr class="${m.year===2025?'yr25':'yr26'}"><td>${m.month}</td><td style="font-weight:700">${fmt(m.count)}</td></tr>`).join('')}<tr class="tr-tot"><td>الإجمالي</td><td style="font-weight:800">${fmt(t.cancelled)}</td></tr></tbody></table></div><div class="chart-row"><div class="chart-box"><h4>الطلبات vs Rush</h4><div class="legend"><span><span class="lsq" style="background:${C}"></span>طلبات</span><span><span class="lsq" style="background:#E74C3C"></span>Rush</span></div><div class="chart-wrap"><canvas id="c-ob-orders"></canvas></div></div><div class="chart-box"><h4>المدة الزمنية</h4><div class="legend"><span><span class="lsq" style="background:${C}"></span>CS Mean</span><span><span class="lsq" style="background:#0F6E56"></span>CS Med</span><span><span class="lsq" style="background:#6C3483"></span>Pick Mean</span><span><span class="lsq" style="background:#5DCAA5"></span>Pick Med</span></div><div class="chart-wrap"><canvas id="c-ob-dur"></canvas></div></div></div>`;['c-ob-orders','c-ob-dur'].forEach(id=>{if(CHARTS[id]){CHARTS[id].destroy();delete CHARTS[id]}});const labels=data.monthly.map(m=>m.month.slice(0,3)+" '"+String(m.year).slice(2));const{tc,gc}=getCC();CHARTS['c-ob-orders']=new Chart(document.getElementById('c-ob-orders'),{type:'bar',data:{labels,datasets:[{label:'طلبات',data:data.monthly.map(m=>m.orders),backgroundColor:C+'BB',borderRadius:4},{label:'Rush',data:data.monthly.map(m=>m.rush),backgroundColor:'#E74C3C',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:tc,autoSkip:false,maxRotation:40,font:{size:10}},grid:{color:gc}},y:{ticks:{color:tc},grid:{color:gc}}}}});CHARTS['c-ob-dur']=new Chart(document.getElementById('c-ob-dur'),{type:'bar',data:{labels,datasets:[{label:'CS Mean',data:data.monthly.map(m=>m.avgCS),backgroundColor:C+'88',borderRadius:4},{label:'CS Med',data:data.monthly.map(m=>m.medCS),type:'line',borderColor:'#0F6E56',backgroundColor:'transparent',borderWidth:2,pointRadius:3,pointBackgroundColor:'#0F6E56',tension:.3,borderDash:[4,3]},{label:'Pick Mean',data:data.monthly.map(m=>m.avgPick),backgroundColor:'#6C3483AA',borderRadius:4},{label:'Pick Med',data:data.monthly.map(m=>m.medPick),type:'line',borderColor:'#5DCAA5',backgroundColor:'transparent',borderWidth:2,pointRadius:3,pointBackgroundColor:'#5DCAA5',tension:.3,borderDash:[4,3]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:tc,autoSkip:false,maxRotation:40,font:{size:10}},grid:{color:gc}},y:{ticks:{color:tc,callback:v=>v.toFixed(1)+'h'},grid:{color:gc}}}}})}
+
+  function buildRushPanel(data){const el=document.getElementById('panel-rush');const C='#A32D2D';if(!data){el.innerHTML=`<div class="empty"><div class="empty-icon">📂</div><p>لم يُرفع ملف Outbound بعد</p></div>`;return}const t=data.totals;const pct=r1(t.orders?t.rush/t.orders*100:0);const rm=data.monthly.filter(m=>m.rush>0);const mrows=rm.map(m=>`<tr class="${m.year===2025?'yr25':'yr26'}"><td>${m.month}</td><td style="color:${C};font-weight:700">${fmt(m.rush)}</td><td style="color:#6B6B6B;font-size:0.72rem">${fmt(m.orders)} (${r1(m.orders?m.rush/m.orders*100:0)}%)</td><td>${fmt(m.ordQty)}</td><td>${fmt(m.picQty)}</td><td style="color:#C0392B">${fmt(m.shQty)}</td><td>${fmt(m.disQty)}</td><td class="avg-td">${fmt(m.rushAvgCS,1)}</td><td style="color:#0F6E56;font-weight:700">${fmt(m.rushMedCS,1)}</td><td class="avg-td">${fmt(m.rushAvgPick,1)}</td><td style="color:#0F6E56;font-weight:700">${fmt(m.rushMedPick,1)}</td></tr>`).join('');const totOQ=rm.reduce((s,m)=>s+m.ordQty,0),totPQ=rm.reduce((s,m)=>s+m.picQty,0),totSQ=rm.reduce((s,m)=>s+m.shQty,0),totDQ=rm.reduce((s,m)=>s+m.disQty,0);el.innerHTML=`<div class="note" style="background:rgba(163,45,45,0.08);border-color:rgba(163,45,45,0.2)">Rush Orders — قيمة عمود "Rush order" = YES</div><div class="kpi-row"><div class="kpi"><div class="kpi-lbl">إجمالي Rush</div><div class="kpi-val" style="color:${C}">${fmt(t.rush)}</div><div class="kpi-avg">${pct}% من ${fmt(t.orders)}</div></div><div class="kpi"><div class="kpi-lbl">Ordered QTY</div><div class="kpi-val" style="color:${C}">${fmt(totOQ)}</div></div><div class="kpi"><div class="kpi-lbl">Picked QTY</div><div class="kpi-val" style="color:${C}">${fmt(totPQ)}</div></div><div class="kpi"><div class="kpi-lbl">Short QTY</div><div class="kpi-val" style="color:#C0392B">${fmt(totSQ)}</div></div><div class="kpi"><div class="kpi-lbl">Dispatched QTY</div><div class="kpi-val" style="color:${C}">${fmt(totDQ)}</div></div><div class="kpi"><div class="kpi-lbl">Mean CS</div><div class="kpi-val" style="color:${C}">${fmt(t.rushAvgCS,1)}</div><div class="kpi-avg">ساعة</div></div><div class="kpi"><div class="kpi-lbl">Median CS</div><div class="kpi-val" style="color:#0F6E56">${fmt(t.rushMedCS,1)}</div><div class="kpi-avg">ساعة</div></div><div class="kpi"><div class="kpi-lbl">Mean Pick</div><div class="kpi-val" style="color:${C}">${fmt(t.rushAvgPick,1)}</div><div class="kpi-avg">ساعة</div></div><div class="kpi"><div class="kpi-lbl">Median Pick</div><div class="kpi-val" style="color:#0F6E56">${fmt(t.rushMedPick,1)}</div><div class="kpi-avg">ساعة</div></div></div><div class="sec">Rush شهرياً</div><div class="tw"><table><thead><tr><th>الشهر</th><th style="background:${C}">Rush</th><th>من الإجمالي</th><th>Ordered</th><th>Picked</th><th style="background:${C}">Short</th><th>Dispatched</th><th>Mean CS</th><th style="background:#0F6E56">Med CS</th><th>Mean Pick</th><th style="background:#0F6E56">Med Pick</th></tr></thead><tbody>${mrows}<tr class="tr-tot"><td>الإجمالي</td><td style="color:${C};font-weight:800">${fmt(t.rush)}</td><td style="color:#6B6B6B">${pct}%</td><td>${fmt(totOQ)}</td><td>${fmt(totPQ)}</td><td style="color:#C0392B">${fmt(totSQ)}</td><td>${fmt(totDQ)}</td><td class="avg-td">${fmt(t.rushAvgCS,1)}</td><td style="color:#0F6E56;font-weight:800">${fmt(t.rushMedCS,1)}</td><td class="avg-td">${fmt(t.rushAvgPick,1)}</td><td style="color:#0F6E56;font-weight:800">${fmt(t.rushMedPick,1)}</td></tr></tbody></table></div><div class="chart-row"><div class="chart-box"><h4>Rush Orders</h4><div class="legend"><span><span class="lsq" style="background:${C}"></span>Rush</span><span><span class="lsq" style="background:#F09595"></span>%</span></div><div class="chart-wrap"><canvas id="c-rush-orders"></canvas></div></div><div class="chart-box"><h4>Rush QTY</h4><div class="legend"><span><span class="lsq" style="background:${C}"></span>Ordered</span><span><span class="lsq" style="background:#E74C3C"></span>Short</span></div><div class="chart-wrap"><canvas id="c-rush-qty"></canvas></div></div></div>`;['c-rush-orders','c-rush-qty'].forEach(id=>{if(CHARTS[id]){CHARTS[id].destroy();delete CHARTS[id]}});const labels=rm.map(m=>m.month.slice(0,3)+" '"+String(m.year).slice(2));const{tc,gc}=getCC();CHARTS['c-rush-orders']=new Chart(document.getElementById('c-rush-orders'),{type:'bar',data:{labels,datasets:[{label:'Rush',data:rm.map(m=>m.rush),backgroundColor:C,borderRadius:4,yAxisID:'y'},{label:'%',data:rm.map(m=>r1(m.orders?m.rush/m.orders*100:0)),type:'line',borderColor:'#F09595',backgroundColor:'transparent',borderWidth:2,pointRadius:3,pointBackgroundColor:'#F09595',yAxisID:'y2',tension:.3,borderDash:[4,3]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{color:tc},grid:{color:gc},position:'right'},y2:{ticks:{color:'#F09595',callback:v=>v+'%'},grid:{display:false},position:'left'},x:{ticks:{color:tc,autoSkip:false,maxRotation:40,font:{size:10}},grid:{color:gc}}}}});CHARTS['c-rush-qty']=new Chart(document.getElementById('c-rush-qty'),{type:'bar',data:{labels,datasets:[{label:'Ordered',data:rm.map(m=>m.ordQty),backgroundColor:C+'88',borderRadius:4},{label:'Short',data:rm.map(m=>m.shQty),backgroundColor:'#E74C3C',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:tc,autoSkip:false,maxRotation:40,font:{size:10}},grid:{color:gc}},y:{ticks:{color:tc,callback:v=>v>=1000?(v/1000).toFixed(0)+'K':v},grid:{color:gc}}}}})}
 </script>
 </body>
 </html>
