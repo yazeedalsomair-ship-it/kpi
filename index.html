@@ -277,7 +277,6 @@ tr:hover td{background:rgba(107,29,74,0.03)}
         <div class="ucard alula" id="card-alula"><div class="ucard-head"><span class="ucard-ico ico-alula">🚚</span><div class="ucard-title" style="color:var(--plum)" id="alulaTitle">ALULA Dispatched</div></div><div class="year-slots"><div class="yslot" id="ys-alula-2025" ondragover="window.dov(event,'alula',2025)" ondragleave="window.dlv('alula',2025)" ondrop="window.ddp(event,'alula',2025)"><div class="yslot-label">2025</div><div class="drop-zone"><input type="file" accept=".xlsx,.xls" onchange="window.loadFile(this,'alula',2025)"><strong>انقر أو اسحب</strong></div><div class="file-info" id="fi-info-alula-2025"><span class="fname" id="fi-name-alula-2025"></span><span class="fi-badge" id="fi-badge-alula-2025"></span><span class="fi-del" onclick="window.removeFile('alula',2025)">✕</span></div></div><div class="yslot" id="ys-alula-2026" ondragover="window.dov(event,'alula',2026)" ondragleave="window.dlv('alula',2026)" ondrop="window.ddp(event,'alula',2026)"><div class="yslot-label">2026</div><div class="drop-zone"><input type="file" accept=".xlsx,.xls" onchange="window.loadFile(this,'alula',2026)"><strong>انقر أو اسحب</strong></div><div class="file-info" id="fi-info-alula-2026"><span class="fname" id="fi-name-alula-2026"></span><span class="fi-badge" id="fi-badge-alula-2026"></span><span class="fi-del" onclick="window.removeFile('alula',2026)">✕</span></div></div></div></div>
         <div class="ucard asn" id="card-asn" ondragover="window.dov(event,'asn',0)" ondragleave="window.dlv('asn',0)" ondrop="window.ddp(event,'asn',0)"><div class="ucard-head"><span class="ucard-ico ico-asn">🏭</span><div class="ucard-title" style="color:var(--purple)">ASN Receipts</div></div><div class="asn-drop"><input type="file" accept=".xlsx,.xls,.csv" onchange="window.loadFile(this,'asn',0)"><strong>انقر أو اسحب الملف</strong><p>تقرير ASN</p></div><div class="file-info" id="fi-info-asn"><span class="fname" id="fi-name-asn"></span><span class="fi-badge" id="fi-badge-asn"></span><span class="fi-del" onclick="window.removeFile('asn',0)">✕</span></div></div>
         <div class="ucard outbound" id="card-outbound" ondragover="window.dov(event,'outbound',0)" ondragleave="window.dlv('outbound',0)" ondrop="window.ddp(event,'outbound',0)"><div class="ucard-head"><span class="ucard-ico ico-outbound">📤</span><div class="ucard-title" style="color:var(--gold-dim)">Outbound Summary</div></div><div class="asn-drop"><input type="file" accept=".xlsx,.xls,.csv" onchange="window.loadFile(this,'outbound',0)"><strong>انقر أو اسحب الملف</strong><p>تقرير Outbound</p></div><div class="file-info" id="fi-info-outbound"><span class="fname" id="fi-name-outbound"></span><span class="fi-badge" id="fi-badge-outbound"></span><span class="fi-del" onclick="window.removeFile('outbound',0)">✕</span></div></div>
-        <!-- تحديث بطاقة رفع الحضور والانصراف لتشمل تحديد الشهر والسنة -->
         <div class="ucard attendance" id="card-attendance" ondragover="window.dov(event,'attendance',0)" ondragleave="window.dlv('attendance',0)" ondrop="window.ddp(event,'attendance',0)">
           <div class="ucard-head"><span class="ucard-ico ico-attendance">👥</span><div class="ucard-title" style="color:#2980b9">Attendance & OT</div></div>
           <div style="display:flex; gap:8px; margin-bottom:10px;">
@@ -309,6 +308,7 @@ tr:hover td{background:rgba(107,29,74,0.03)}
         <div class="tab" onclick="window.showTab('rush',this)">🚨 Rush Orders</div>
         <div class="tab" onclick="window.showTab('attendance',this)">👥 الحضور والعمل الإضافي</div>
         <div class="tab" onclick="window.showTab('evaluation',this)">⭐️ التقييم والحوافز</div>
+        <div class="tab" onclick="window.showTab('equipment',this)">⚙️ المعدات والصيانة</div>
       </div>
       <div class="panel on" id="panel-ov"></div>
       <div class="panel" id="panel-madinah"></div>
@@ -318,6 +318,7 @@ tr:hover td{background:rgba(107,29,74,0.03)}
       <div class="panel" id="panel-rush"></div>
       <div class="panel" id="panel-attendance"></div>
       <div class="panel" id="panel-evaluation"></div>
+      <div class="panel" id="panel-equipment"></div>
     </div>
   </div>
 
@@ -426,13 +427,9 @@ tr:hover td{background:rgba(107,29,74,0.03)}
       const docSnap = await getDoc(docRef);
       if (docSnap.exists() && docSnap.data().dashboardData) {
         PARSED = docSnap.data().dashboardData; 
-        
-        // ترقية هيكل البيانات القديم للحضور إن وُجد
-        if (PARSED.attendance && !PARSED.attendanceData) {
-          PARSED.attendanceData = { "2026_4": PARSED.attendance };
-          delete PARSED.attendance;
-        }
+        if (PARSED.attendance && !PARSED.attendanceData) { PARSED.attendanceData = { "2026_4": PARSED.attendance }; delete PARSED.attendance; }
         if(!PARSED.evaluations) PARSED.evaluations = [];
+        if(!PARSED.equipment) PARSED.equipment = []; // إضافة تهيئة المعدات السحابية
         
         updateStatus(); buildDash();
         
@@ -442,7 +439,7 @@ tr:hover td{background:rgba(107,29,74,0.03)}
         if(PARSED.alula_2026) document.getElementById('fi-info-alula-2026').classList.add('show');
         if(PARSED.asn) document.getElementById('fi-info-asn').classList.add('show');
         if(PARSED.outbound) document.getElementById('fi-info-outbound').classList.add('show');
-      } else { updateStatus(); buildAttendancePanel(); buildEvaluationPanel(); }
+      } else { updateStatus(); buildAttendancePanel(); buildEvaluationPanel(); buildEquipmentPanel(); }
     } catch(e) { console.error(e); }
   }
 
@@ -458,7 +455,6 @@ tr:hover td{background:rgba(107,29,74,0.03)}
   window.dov = function(e,key,yr){e.preventDefault();(yr?document.getElementById('ys-'+key+'-'+yr):document.getElementById('card-'+key)).classList.add('drag')}
   window.dlv = function(key,yr){(yr?document.getElementById('ys-'+key+'-'+yr):document.getElementById('card-'+key)).classList.remove('drag')}
   window.ddp = function(e,key,yr){e.preventDefault();window.dlv(key,yr);const f=e.dataTransfer.files[0];if(f)window.loadFile({files:[f]},key,yr)}
-
   window.attUpChanged = function() { document.getElementById('fi-info-attendance').classList.remove('show'); }
 
   const MONTH_NAMES=new Set(['January','February','March','April','May','June','July','August','September','October','November','December']);
@@ -544,7 +540,6 @@ tr:hover td{background:rgba(107,29,74,0.03)}
     const parts = s.split(':');
     return (parseInt(parts[0], 10) || 0) * 60 + (parseInt(parts[1], 10) || 0);
   }
-  
   window.minsToTime = function(mins) {
     const absMins = Math.abs(mins);
     const h = Math.floor(absMins/60);
@@ -564,7 +559,6 @@ tr:hover td{background:rgba(107,29,74,0.03)}
         const k = Object.keys(row).find(x => String(x).includes(keyPart));
         return k ? row[k] : '';
       };
-      
       const name = getVal('الاسم');
       const empId = getVal('الرقم الوظيفي');
       const workedStr = getVal('عمل الموظف'); 
@@ -609,22 +603,19 @@ tr:hover td{background:rgba(107,29,74,0.03)}
 
   function buildDash(){
     const dm=getMergedParsed('madinah'), da=getMergedParsed('alula'), ds=PARSED.asn, dob=PARSED.outbound, datt=PARSED.attendanceData;
-    const any = dm||da||ds||dob||datt||(PARSED.evaluations && PARSED.evaluations.length > 0);
+    const any = dm||da||ds||dob||datt||(PARSED.evaluations && PARSED.evaluations.length > 0) || (PARSED.equipment && PARSED.equipment.length > 0);
     document.getElementById('dash').style.display=any?'block':'none';
     if(!any)return;
     buildOV(dm,da,ds); buildPanel('madinah',dm,'#0F6E56','طلبات','لاينات',false); buildPanel('alula',da,'#6B1D4A','طلبات','لاينات',false);
     buildPanel('asn',ds,'#6C3483','TRK','PO Lines',true); buildOutboundPanel(dob); buildRushPanel(dob); 
-    buildAttendancePanel(); buildEvaluationPanel();
+    buildAttendancePanel(); buildEvaluationPanel(); buildEquipmentPanel();
   }
 
   function buildOV(dm,da,ds){const el=document.getElementById('panel-ov');function card(data,icon,label,color){if(!data)return`<div class="kpi"><div class="kpi-lbl">${icon} ${label}</div><div style="color:var(--gray-300);font-size:0.8rem;margin-top:10px">لم يُرفع بعد</div></div>`;const t=data.totals,ul=label.includes('ASN')?'TRK':'طلب';return`<div class="kpi"><div class="kpi-lbl" style="color:${color}">${icon} ${label}</div><div class="kpi-val" style="color:${color}">${fmt(t.orders)}</div><div class="kpi-avg">متوسط <span>${fmt(t.avgOrd,1)}</span> ${ul}/يوم</div><div style="font-size:0.72rem;color:var(--gray-600);margin-top:4px">Lines: ${fmt(t.lines)} · QTY: ${fmt(t.qty)}</div></div>`}const all=[dm,da,ds].filter(Boolean);const allP=[...new Set(all.flatMap(d=>d.monthly.map(m=>m.year+'_'+m.month)))].sort((a,b)=>{const[ay,am]=a.split('_');const[by,bm]=b.split('_');return ay!==by?ay-by:(MO[am]||0)-(MO[bm]||0)});const trows=allP.map(p=>{const[yr,mo]=p.split('_'),y=parseInt(yr);const am=dm?.monthly.find(x=>x.year==yr&&x.month===mo);const al=da?.monthly.find(x=>x.year==yr&&x.month===mo);const as=ds?.monthly.find(x=>x.year==yr&&x.month===mo);return`<tr class="${y===2025?'yr25':'yr26'}"><td>${mo}</td><td>${am?fmt(am.orders):'—'}</td><td class="avg-td">${am?fmt(am.avgOrd,1):'—'}</td><td>${am?fmt(am.qty):'—'}</td><td>${al?fmt(al.orders):'—'}</td><td class="avg-td">${al?fmt(al.avgOrd,1):'—'}</td><td>${al?fmt(al.qty):'—'}</td><td>${as?fmt(as.orders):'—'}</td><td class="avg-td">${as?fmt(as.avgOrd,1):'—'}</td><td>${as?fmt(as.qty):'—'}</td></tr>`}).join('');el.innerHTML=`<div class="kpi-row" style="grid-template-columns:repeat(3,minmax(0,1fr))">${card(dm,'📦','MADINAH Received','#0F6E56')}${card(da,'🚚','Dispatched','#6B1D4A')}${card(ds,'🏭','ASN Receipts','#6C3483')}</div><div class="sec">مقارنة شهرية</div><div class="tw"><table><thead><tr><th>الشهر</th><th style="background:#0F6E56">MAD طلبات</th><th style="background:#0F6E56">متوسط/يوم</th><th style="background:#0F6E56">QTY</th><th style="background:#6B1D4A">طلبات</th><th style="background:#6B1D4A">متوسط/يوم</th><th style="background:#6B1D4A">QTY</th><th style="background:#6C3483">ASN TRK</th><th style="background:#6C3483">متوسط/يوم</th><th style="background:#6C3483">Recv QTY</th></tr></thead><tbody>${trows||'<tr><td colspan="10" style="text-align:center;color:var(--gray-300);padding:30px">ارفع ملفاً على الأقل</td></tr>'}</tbody></table></div>`}
   function buildPanel(key,data,color,oLbl,lLbl,isASN){const el=document.getElementById('panel-'+key);if(!data){el.innerHTML=`<div class="empty"><div class="empty-icon">📂</div><p>لم يُرفع ملف بعد</p></div>`;return}const t=data.totals;const note=isASN?`<div class="note">كل TRK = طلب واحد بدون تكرار · Status = Closed فقط · ${fmt(t.orders)} TRK فريدة</div>`:'';const mrows=data.monthly.map(m=>`<tr class="${m.year===2025?'yr25':'yr26'}"><td>${m.month}</td><td>${m.days}</td><td>${fmt(m.orders)}</td><td class="avg-td">${fmt(m.avgOrd,1)}</td><td>${fmt(m.lines)}</td><td class="avg-td">${fmt(m.avgLines,1)}</td><td>${fmt(m.qty)}</td><td class="avg-td">${fmt(m.avgQty,1)}</td></tr>`).join('');const tot=`<tr class="tr-tot"><td>الإجمالي</td><td>${t.days}</td><td>${fmt(t.orders)}</td><td class="avg-td">${fmt(t.avgOrd,1)}</td><td>${fmt(t.lines)}</td><td class="avg-td">${fmt(t.avgLines,1)}</td><td>${fmt(t.qty)}</td><td class="avg-td">${fmt(t.avgQty,1)}</td></tr>`;el.innerHTML=`${note}<div class="kpi-row"><div class="kpi"><div class="kpi-lbl">${oLbl}</div><div class="kpi-val" style="color:${color}">${fmt(t.orders)}</div><div class="kpi-avg">متوسط <span>${fmt(t.avgOrd,1)}</span>/يوم</div></div><div class="kpi"><div class="kpi-lbl">${lLbl}</div><div class="kpi-val" style="color:${color}">${fmt(t.lines)}</div><div class="kpi-avg">متوسط <span>${fmt(t.avgLines,1)}</span>/يوم</div></div><div class="kpi"><div class="kpi-lbl">${isASN?'Received QTY':'إجمالي QTY'}</div><div class="kpi-val" style="color:${color}">${fmt(t.qty)}</div><div class="kpi-avg">متوسط <span>${fmt(t.avgQty,1)}</span>/يوم</div></div><div class="kpi"><div class="kpi-lbl">أيام عمل</div><div class="kpi-val" style="color:${color}">${t.days}</div></div></div><div class="sec">تفصيل شهري</div><div class="tw"><table><thead><tr><th>الشهر</th><th>أيام</th><th>${oLbl}</th><th>متوسط/يوم</th><th>${lLbl}</th><th>متوسط/يوم</th><th>QTY</th><th>متوسط/يوم</th></tr></thead><tbody>${mrows}${tot}</tbody></table></div><div class="chart-row"><div class="chart-box"><h4>${oLbl} + متوسط/يوم</h4><div class="legend"><span><span class="lsq" style="background:${color}"></span>${oLbl}</span><span><span class="lsq" style="background:#E74C3C"></span>متوسط/يوم</span></div><div class="chart-wrap"><canvas id="c1-${key}"></canvas></div></div><div class="chart-box"><h4>QTY + متوسط/يوم</h4><div class="legend"><span><span class="lsq" style="background:${color}"></span>QTY</span><span><span class="lsq" style="background:#E74C3C"></span>متوسط/يوم</span></div><div class="chart-wrap"><canvas id="c2-${key}"></canvas></div></div></div>`;['c1-'+key,'c2-'+key].forEach(id=>{if(CHARTS[id]){CHARTS[id].destroy();delete CHARTS[id]}});const labels=data.monthly.map(m=>m.month.slice(0,3)+" '"+String(m.year).slice(2));const{tc,gc}=getCC();const bc=data.monthly.map(m=>m.year===2025?color+'BB':color);CHARTS['c1-'+key]=new Chart(document.getElementById('c1-'+key),{type:'bar',data:{labels,datasets:[{data:data.monthly.map(m=>m.orders),backgroundColor:bc,borderRadius:4,yAxisID:'y'},{data:data.monthly.map(m=>m.avgOrd),type:'line',borderColor:'#E74C3C',backgroundColor:'transparent',borderWidth:2,pointRadius:3,pointBackgroundColor:'#E74C3C',yAxisID:'y2',tension:.3,borderDash:[4,3]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{color:tc},grid:{color:gc},position:'right'},y2:{ticks:{color:'#E74C3C',font:{size:10}},grid:{display:false},position:'left'},x:{ticks:{color:tc,autoSkip:false,maxRotation:40,font:{size:10}},grid:{color:gc}}}}});CHARTS['c2-'+key]=new Chart(document.getElementById('c2-'+key),{type:'bar',data:{labels,datasets:[{data:data.monthly.map(m=>m.qty),backgroundColor:bc.map(c=>c+'88'),borderRadius:4,yAxisID:'y'},{data:data.monthly.map(m=>m.avgQty),type:'line',borderColor:'#E74C3C',backgroundColor:'transparent',borderWidth:2,pointRadius:3,pointBackgroundColor:'#E74C3C',yAxisID:'y2',tension:.3,borderDash:[4,3]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{color:tc,callback:v=>v>=1000?(v/1000).toFixed(0)+'K':v},grid:{color:gc},position:'right'},y2:{ticks:{color:'#E74C3C',font:{size:10},callback:v=>v>=1000?(v/1000).toFixed(0)+'K':v},grid:{display:false},position:'left'},x:{ticks:{color:tc,autoSkip:false,maxRotation:40,font:{size:10}},grid:{color:gc}}}}})}
-  function buildOutboundPanel(data){const el=document.getElementById('panel-outbound');const C='#B8923A';if(!data){el.innerHTML=`<div class="empty"><div class="empty-icon">📂</div><p>لم يُرفع الملف بعد</p></div>`;return}const t=data.totals;const mrows=data.monthly.map(m=>`<tr class="${m.year===2025?'yr25':'yr26'}"><td>${m.month}</td><td>${fmt(m.orders)}</td><td style="color:#C0392B;font-weight:700">${fmt(m.rush)}</td><td>${fmt(m.ordQty)}</td><td>${fmt(m.picQty)}</td><td style="color:#C0392B">${fmt(m.shQty)}</td><td>${fmt(m.disQty)}</td><td class="avg-td">${fmt(m.avgCS,1)}</td><td style="color:#0F6E56;font-weight:700">${fmt(m.medCS,1)}</td><td class="avg-td">${fmt(m.avgPick,1)}</td><td style="color:#0F6E56;font-weight:700">${fmt(m.medPick,1)}</td></tr>`).join('');const tot=`<tr class="tr-tot"><td>الإجمالي</td><td>${fmt(t.orders)}</td><td style="color:#C0392B;font-weight:800">${fmt(t.rush)}</td><td>${fmt(t.ordQty)}</td><td>${fmt(t.picQty)}</td><td>${fmt(t.shQty)}</td><td>${fmt(t.disQty)}</td><td class="avg-td">${fmt(t.avgCS,1)}</td><td style="color:#0F6E56;font-weight:800">${fmt(t.medCS,1)}</td><td class="avg-td">${fmt(t.avgPick,1)}</td><td style="color:#0F6E56;font-weight:800">${fmt(t.medPick,1)}</td></tr>`;el.innerHTML=`<div class="note">المدة الزمنية بالساعات · <b>Create→Staged</b> = من إنشاء الطلب حتى التجهيز · <b>Picking</b> = من بدء الـ Picking حتى اكتماله</div><div class="kpi-row"><div class="kpi"><div class="kpi-lbl">إجمالي الطلبات</div><div class="kpi-val" style="color:${C}">${fmt(t.orders)}</div></div><div class="kpi"><div class="kpi-lbl">Rush Orders</div><div class="kpi-val" style="color:#C0392B">${fmt(t.rush)}</div><div class="kpi-avg">${r1(t.orders?t.rush/t.orders*100:0)}%</div></div><div class="kpi"><div class="kpi-lbl">Cancelled</div><div class="kpi-val" style="color:#6B6B6B">${fmt(t.cancelled)}</div></div><div class="kpi"><div class="kpi-lbl">Ordered QTY</div><div class="kpi-val" style="color:${C}">${fmt(t.ordQty)}</div></div><div class="kpi"><div class="kpi-lbl">Picked QTY</div><div class="kpi-val" style="color:${C}">${fmt(t.picQty)}</div></div><div class="kpi"><div class="kpi-lbl">Short QTY</div><div class="kpi-val" style="color:#C0392B">${fmt(t.shQty)}</div></div><div class="kpi"><div class="kpi-lbl">Dispatched QTY</div><div class="kpi-val" style="color:${C}">${fmt(t.disQty)}</div></div><div class="kpi"><div class="kpi-lbl">Mean CS</div><div class="kpi-val" style="color:${C}">${fmt(t.avgCS,1)}</div><div class="kpi-avg">ساعة</div></div><div class="kpi"><div class="kpi-lbl">Median CS</div><div class="kpi-val" style="color:#0F6E56">${fmt(t.medCS,1)}</div><div class="kpi-avg">ساعة</div></div><div class="kpi"><div class="kpi-lbl">Mean Pick</div><div class="kpi-val" style="color:${C}">${fmt(t.avgPick,1)}</div><div class="kpi-avg">ساعة</div></div><div class="kpi"><div class="kpi-lbl">Median Pick</div><div class="kpi-val" style="color:#0F6E56">${fmt(t.medPick,1)}</div><div class="kpi-avg">ساعة</div></div></div><div class="sec">تفصيل شهري</div><div class="tw"><table><thead><tr><th>الشهر</th><th>الطلبات</th><th style="background:#922B21">Rush</th><th>Ordered</th><th>Picked</th><th style="background:#922B21">Short</th><th>Dispatched</th><th>Avg CS</th><th style="background:#0F6E56">Med CS</th><th>Avg Pick</th><th style="background:#0F6E56">Med Pick</th></tr></thead><tbody>${mrows}${tot}</tbody></table></div><div class="sec">Cancelled</div><div class="tw"><table><thead><tr><th>الشهر</th><th style="background:#5F5E5A">عدد</th></tr></thead><tbody>${(data.cancelledMonthly||[]).map(m=>`<tr class="${m.year===2025?'yr25':'yr26'}"><td>${m.month}</td><td style="font-weight:700">${fmt(m.count)}</td></tr>`).join('')}<tr class="tr-tot"><td>الإجمالي</td><td style="font-weight:800">${fmt(t.cancelled)}</td></tr></tbody></table></div><div class="chart-row"><div class="chart-box"><h4>الطلبات vs Rush</h4><div class="legend"><span><span class="lsq" style="background:${C}"></span>طلبات</span><span><span class="lsq" style="background:#E74C3C"></span>Rush</span></div><div class="chart-wrap"><canvas id="c-ob-orders"></canvas></div></div><div class="chart-box"><h4>المدة الزمنية</h4><div class="legend"><span><span class="lsq" style="background:${C}"></span>CS Mean</span><span><span class="lsq" style="background:#0F6E56"></span>CS Med</span><span><span class="lsq" style="background:#6C3483"></span>Pick Mean</span><span><span class="lsq" style="background:#5DCAA5"></span>Pick Med</span></div><div class="chart-wrap"><canvas id="c-ob-dur"></canvas></div></div></div>`;['c-ob-orders','c-ob-dur'].forEach(id=>{if(CHARTS[id]){CHARTS[id].destroy();delete CHARTS[id]}});const labels=data.monthly.map(m=>m.month.slice(0,3)+" '"+String(m.year).slice(2));const{tc,gc}=getCC();CHARTS['c-ob-orders']=new Chart(document.getElementById('c-ob-orders'),{type:'bar',data:{labels,datasets:[{label:'طلبات',data:data.monthly.map(m=>m.orders),backgroundColor:C+'BB',borderRadius:4},{label:'Rush',data:data.monthly.map(m=>m.rush),backgroundColor:'#E74C3C',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:tc,autoSkip:false,maxRotation:40,font:{size:10}},grid:{color:gc}},y:{ticks:{color:tc},grid:{color:gc}}}}});CHARTS['c-ob-dur']=new Chart(document.getElementById('c-ob-dur'),{type:'bar',data:{labels,datasets:[{label:'CS Mean',data:data.monthly.map(m=>m.avgCS),backgroundColor:C+'88',borderRadius:4},{label:'CS Med',data:data.monthly.map(m=>m.medCS),type:'line',borderColor:'#0F6E56',backgroundColor:'transparent',borderWidth:2,pointRadius:3,pointBackgroundColor:'#0F6E56',tension:.3,borderDash:[4,3]},{label:'Pick Mean',data:data.monthly.map(m=>m.avgPick),backgroundColor:'#6C3483AA',borderRadius:4},{label:'Pick Med',data:data.monthly.map(m=>m.medPick),type:'line',borderColor:'#5DCAA5',backgroundColor:'transparent',borderWidth:2,pointRadius:3,pointBackgroundColor:'#5DCAA5',tension:.3,borderDash:[4,3]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:tc,autoSkip:false,maxRotation:40,font:{size:10}},grid:{color:gc}},y:{ticks:{color:tc,callback:v=>v.toFixed(1)+'h'},grid:{color:gc}}}}})}
+  function buildOutboundPanel(data){const el=document.getElementById('panel-outbound');const C='#B8923A';if(!data){el.innerHTML=`<div class="empty"><div class="empty-icon">📂</div><p>لم يُرفع الملف بعد</p></div>`;return}const t=data.totals;const mrows=data.monthly.map(m=>`<tr class="${m.year===2025?'yr25':'yr26'}"><td>${m.month}</td><td>${fmt(m.orders)}</td><td style="color:#C0392B;font-weight:700">${fmt(m.rush)}</td><td>${fmt(m.ordQty)}</td><td>${fmt(m.picQty)}</td><td style="color:#C0392B">${fmt(m.shQty)}</td><td>${fmt(m.disQty)}</td><td class="avg-td">${fmt(m.avgCS,1)}</td><td style="color:#0F6E56;font-weight:700">${fmt(m.medCS,1)}</td><td class="avg-td">${fmt(m.avgPick,1)}</td><td style="color:#0F6E56;font-weight:700">${fmt(m.medPick,1)}</td></tr>`).join('');const tot=`<tr class="tr-tot"><td>الإجمالي</td><td>${fmt(t.orders)}</td><td style="color:#C0392B;font-weight:800">${fmt(t.rush)}</td><td>${fmt(t.ordQty)}</td><td>${fmt(t.picQty)}</td><td>${fmt(t.shQty)}</td><td>${fmt(t.disQty)}</td><td class="avg-td">${fmt(t.avgCS,1)}</td><td style="color:#0F6E56;font-weight:800">${fmt(t.medCS,1)}</td><td class="avg-td">${fmt(t.avgPick,1)}</td><td style="color:#0F6E56;font-weight:800">${fmt(t.medPick,1)}</td></tr>`;el.innerHTML=`<div class="note">المدة الزمنية بالساعات · <b>Create→Staged</b> = من إنشاء الطلب حتى التجهيز · <b>Picking</b> = من بدء الـ Picking حتى اكتماله</div><div class="kpi-row"><div class="kpi"><div class="kpi-lbl">إجمالي الطلبات</div><div class="kpi-val" style="color:${C}">${fmt(t.orders)}</div></div><div class="kpi"><div class="kpi-lbl">Rush Orders</div><div class="kpi-val" style="color:#C0392B">${fmt(t.rush)}</div><div class="kpi-avg">${r1(t.orders?t.rush/t.orders*100:0)}%</div></div><div class="kpi"><div class="kpi-lbl">Cancelled</div><div class="kpi-val" style="color:#6B6B6B">${fmt(t.cancelled)}</div></div><div class="kpi"><div class="kpi-lbl">Ordered QTY</div><div class="kpi-val" style="color:${C}">${fmt(t.ordQty)}</div></div><div class="kpi"><div class="kpi-lbl">Picked QTY</div><div class="kpi-val" style="color:${C}">${fmt(t.picQty)}</div></div><div class="kpi"><div class="kpi-lbl">Short QTY</div><div class="kpi-val" style="color:#C0392B">${fmt(t.shQty)}</div></div><div class="kpi"><div class="kpi-lbl">Dispatched QTY</div><div class="kpi-val" style="color:${C}">${fmt(t.disQty)}</div></div><div class="kpi"><div class="kpi-lbl">Mean CS</div><div class="kpi-val" style="color:${C}">${fmt(t.avgCS,1)}</div><div class="kpi-avg">ساعة</div></div><div class="kpi"><div class="kpi-lbl">Median CS</div><div class="kpi-val" style="color:#0F6E56">${fmt(t.medCS,1)}</div><div class="kpi-avg">ساعة</div></div><div class="kpi"><div class="kpi-lbl">Mean Pick</div><div class="kpi-val" style="color:${C}">${fmt(t.avgPick,1)}</div><div class="kpi-avg">ساعة</div></div><div class="kpi"><div class="kpi-lbl">Median Pick</div><div class="kpi-val" style="color:#0F6E56">${fmt(t.medPick,1)}</div><div class="kpi-avg">ساعة</div></div></div><div class="sec">تفصيل شهري</div><div class="tw"><table><thead><tr><th>الشهر</th><th>الطلبات</th><th style="background:#922B21">Rush</th><th>Ordered</th><th>Picked</th><th style="background:#922B21">Short</th><th>Dispatched</th><th>Avg CS</th><th style="background:#0F6E56">Med CS</th><th>Avg Pick</th><th style="background:#0F6E56">Med Pick</th></tr></thead><tbody>${mrows}${tot}</tbody></table></div><div class="sec">Cancelled</div><div class="tw"><table><thead><tr><th>الشهر</th><th style="background:#5F5E5A">عدد</th></tr></thead><tbody>${(data.cancelledMonthly||[]).map(m=>`<tr class="${m.year===2025?'yr25':'yr26'}"><td>${m.month}</td><td style="font-weight:700">${fmt(m.count)}</td></tr>`).join('')}<tr class="tr-tot"><td>الإجمالي</td><td style="font-weight:800">${fmt(t.cancelled)}</td></tr></tbody></table></div><div class="chart-row"><div class="chart-box"><h4>الطلبات vs Rush</h4><div class="legend"><span><span class="lsq" style="background:${C}"></span>طلبات</span><span><span class="lsq" style="background:#E74C3C"></span>Rush</span></div><div class="chart-wrap"><canvas id="c-ob-orders"></canvas></div></div><div class="chart-box"><h4>المدة الزمنية</h4><div class="legend"><span><span class="lsq" style="background:${C}"></span>CS Mean</span><span><span class="lsq" style="background:#0F6E56"></span>CS Med</span><span><span class="lsq" style="background:#6C3483"></span>Pick Mean</span><span><span class="lsq" style="background:#5DCAA5"></span>Pick Med</span></div><div class="chart-wrap"><canvas id="c-ob-dur"></canvas></div></div></div>`;['c-rush-orders','c-rush-qty'].forEach(id=>{if(CHARTS[id]){CHARTS[id].destroy();delete CHARTS[id]}});const labels=data.monthly.map(m=>m.month.slice(0,3)+" '"+String(m.year).slice(2));const{tc,gc}=getCC();CHARTS['c-ob-orders']=new Chart(document.getElementById('c-ob-orders'),{type:'bar',data:{labels,datasets:[{label:'طلبات',data:data.monthly.map(m=>m.orders),backgroundColor:C+'BB',borderRadius:4},{label:'Rush',data:data.monthly.map(m=>m.rush),backgroundColor:'#E74C3C',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:tc,autoSkip:false,maxRotation:40,font:{size:10}},grid:{color:gc}},y:{ticks:{color:tc},grid:{color:gc}}}}});CHARTS['c-ob-dur']=new Chart(document.getElementById('c-ob-dur'),{type:'bar',data:{labels,datasets:[{label:'CS Mean',data:data.monthly.map(m=>m.avgCS),backgroundColor:C+'88',borderRadius:4},{label:'CS Med',data:data.monthly.map(m=>m.medCS),type:'line',borderColor:'#0F6E56',backgroundColor:'transparent',borderWidth:2,pointRadius:3,pointBackgroundColor:'#0F6E56',tension:.3,borderDash:[4,3]},{label:'Pick Mean',data:data.monthly.map(m=>m.avgPick),backgroundColor:'#6C3483AA',borderRadius:4},{label:'Pick Med',data:data.monthly.map(m=>m.medPick),type:'line',borderColor:'#5DCAA5',backgroundColor:'transparent',borderWidth:2,pointRadius:3,pointBackgroundColor:'#5DCAA5',tension:.3,borderDash:[4,3]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:tc,autoSkip:false,maxRotation:40,font:{size:10}},grid:{color:gc}},y:{ticks:{color:tc,callback:v=>v.toFixed(1)+'h'},grid:{color:gc}}}}})}
   function buildRushPanel(data){const el=document.getElementById('panel-rush');const C='#A32D2D';if(!data){el.innerHTML=`<div class="empty"><div class="empty-icon">📂</div><p>لم يُرفع ملف Outbound بعد</p></div>`;return}const t=data.totals;const pct=r1(t.orders?t.rush/t.orders*100:0);const rm=data.monthly.filter(m=>m.rush>0);const mrows=rm.map(m=>`<tr class="${m.year===2025?'yr25':'yr26'}"><td>${m.month}</td><td style="color:${C};font-weight:700">${fmt(m.rush)}</td><td style="color:#6B6B6B;font-size:0.72rem">${fmt(m.orders)} (${r1(m.orders?m.rush/m.orders*100:0)}%)</td><td>${fmt(m.ordQty)}</td><td>${fmt(m.picQty)}</td><td style="color:#C0392B">${fmt(m.shQty)}</td><td>${fmt(m.disQty)}</td><td class="avg-td">${fmt(m.rushAvgCS,1)}</td><td style="color:#0F6E56;font-weight:700">${fmt(m.rushMedCS,1)}</td><td class="avg-td">${fmt(m.rushAvgPick,1)}</td><td style="color:#0F6E56;font-weight:700">${fmt(m.rushMedPick,1)}</td></tr>`).join('');const totOQ=rm.reduce((s,m)=>s+m.ordQty,0),totPQ=rm.reduce((s,m)=>s+m.picQty,0),totSQ=rm.reduce((s,m)=>s+m.shQty,0),totDQ=rm.reduce((s,m)=>s+m.disQty,0);el.innerHTML=`<div class="note" style="background:rgba(163,45,45,0.08);border-color:rgba(163,45,45,0.2)">Rush Orders — قيمة عمود "Rush order" = YES</div><div class="kpi-row"><div class="kpi"><div class="kpi-lbl">إجمالي Rush</div><div class="kpi-val" style="color:${C}">${fmt(t.rush)}</div><div class="kpi-avg">${pct}% من ${fmt(t.orders)}</div></div><div class="kpi"><div class="kpi-lbl">Ordered QTY</div><div class="kpi-val" style="color:${C}">${fmt(totOQ)}</div></div><div class="kpi"><div class="kpi-lbl">Picked QTY</div><div class="kpi-val" style="color:${C}">${fmt(totPQ)}</div></div><div class="kpi"><div class="kpi-lbl">Short QTY</div><div class="kpi-val" style="color:#C0392B">${fmt(totSQ)}</div></div><div class="kpi"><div class="kpi-lbl">Dispatched QTY</div><div class="kpi-val" style="color:${C}">${fmt(totDQ)}</div></div><div class="kpi"><div class="kpi-lbl">Mean CS</div><div class="kpi-val" style="color:${C}">${fmt(t.rushAvgCS,1)}</div><div class="kpi-avg">ساعة</div></div><div class="kpi"><div class="kpi-lbl">Median CS</div><div class="kpi-val" style="color:#0F6E56">${fmt(t.rushMedCS,1)}</div><div class="kpi-avg">ساعة</div></div><div class="kpi"><div class="kpi-lbl">Mean Pick</div><div class="kpi-val" style="color:${C}">${fmt(t.rushAvgPick,1)}</div><div class="kpi-avg">ساعة</div></div><div class="kpi"><div class="kpi-lbl">Median Pick</div><div class="kpi-val" style="color:#0F6E56">${fmt(t.rushMedPick,1)}</div><div class="kpi-avg">ساعة</div></div></div><div class="sec">Rush شهرياً</div><div class="tw"><table><thead><tr><th>الشهر</th><th style="background:${C}">Rush</th><th>من الإجمالي</th><th>Ordered</th><th>Picked</th><th style="background:${C}">Short</th><th>Dispatched</th><th>Mean CS</th><th style="background:#0F6E56">Med CS</th><th>Mean Pick</th><th style="background:#0F6E56">Med Pick</th></tr></thead><tbody>${mrows}<tr class="tr-tot"><td>الإجمالي</td><td style="color:${C};font-weight:800">${fmt(t.rush)}</td><td style="color:#6B6B6B">${pct}%</td><td>${fmt(totOQ)}</td><td>${fmt(totPQ)}</td><td style="color:#C0392B">${fmt(totSQ)}</td><td>${fmt(totDQ)}</td><td class="avg-td">${fmt(t.rushAvgCS,1)}</td><td style="color:#0F6E56;font-weight:800">${fmt(t.rushMedCS,1)}</td><td class="avg-td">${fmt(t.rushAvgPick,1)}</td><td style="color:#0F6E56;font-weight:800">${fmt(t.rushMedPick,1)}</td></tr></tbody></table></div><div class="chart-row"><div class="chart-box"><h4>Rush Orders</h4><div class="legend"><span><span class="lsq" style="background:${C}"></span>Rush</span><span><span class="lsq" style="background:#F09595"></span>%</span></div><div class="chart-wrap"><canvas id="c-rush-orders"></canvas></div></div><div class="chart-box"><h4>Rush QTY</h4><div class="legend"><span><span class="lsq" style="background:${C}"></span>Ordered</span><span><span class="lsq" style="background:#E74C3C"></span>Short</span></div><div class="chart-wrap"><canvas id="c-rush-qty"></canvas></div></div></div>`;['c-rush-orders','c-rush-qty'].forEach(id=>{if(CHARTS[id]){CHARTS[id].destroy();delete CHARTS[id]}});const labels=rm.map(m=>m.month.slice(0,3)+" '"+String(m.year).slice(2));const{tc,gc}=getCC();CHARTS['c-rush-orders']=new Chart(document.getElementById('c-rush-orders'),{type:'bar',data:{labels,datasets:[{label:'Rush',data:rm.map(m=>m.rush),backgroundColor:C,borderRadius:4,yAxisID:'y'},{label:'%',data:rm.map(m=>r1(m.orders?m.rush/m.orders*100:0)),type:'line',borderColor:'#F09595',backgroundColor:'transparent',borderWidth:2,pointRadius:3,pointBackgroundColor:'#F09595',yAxisID:'y2',tension:.3,borderDash:[4,3]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{color:tc},grid:{color:gc},position:'right'},y2:{ticks:{color:'#F09595',callback:v=>v+'%'},grid:{display:false},position:'left'},x:{ticks:{color:tc,autoSkip:false,maxRotation:40,font:{size:10}},grid:{color:gc}}}}});CHARTS['c-rush-qty']=new Chart(document.getElementById('c-rush-qty'),{type:'bar',data:{labels,datasets:[{label:'Ordered',data:rm.map(m=>m.ordQty),backgroundColor:C+'88',borderRadius:4},{label:'Short',data:rm.map(m=>m.shQty),backgroundColor:'#E74C3C',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:tc,autoSkip:false,maxRotation:40,font:{size:10}},grid:{color:gc}},y:{ticks:{color:tc,callback:v=>v>=1000?(v/1000).toFixed(0)+'K':v},grid:{color:gc}}}}})}
 
-  // ══════════════════════════════════════════════════════════════
-  // ATTENDANCE PANEL (UPDATED WITH FILTERS)
-  // ══════════════════════════════════════════════════════════════
   function buildAttendancePanel() {
     const el = document.getElementById('panel-attendance');
     let mOpts = '', yOpts = '<option value="2026">2026</option><option value="2025">2025</option>';
@@ -644,27 +635,18 @@ tr:hover td{background:rgba(107,29,74,0.03)}
       </div>
       <div id="attContent"></div>
     `;
-    
-    const d = new Date();
-    document.getElementById('attViewMonth').value = d.getMonth() + 1;
-    document.getElementById('attViewYear').value = d.getFullYear();
+    const d = new Date(); document.getElementById('attViewMonth').value = d.getMonth() + 1; document.getElementById('attViewYear').value = d.getFullYear();
     window.drawAttData();
   }
 
   window.drawAttData = function() {
-    const m = document.getElementById('attViewMonth').value;
-    const y = document.getElementById('attViewYear').value;
-    const key = y + '_' + m;
-    const c = document.getElementById('attContent');
-    const C = '#2980b9';
+    const m = document.getElementById('attViewMonth').value; const y = document.getElementById('attViewYear').value; const key = y + '_' + m;
+    const c = document.getElementById('attContent'); const C = '#2980b9';
 
     if(!PARSED.attendanceData || !PARSED.attendanceData[key]){
-      c.innerHTML = `<div class="empty"><div class="empty-icon">👥</div><p>لا توجد بيانات حضور مسجلة لهذا الشهر</p></div>`;
-      return;
+      c.innerHTML = `<div class="empty"><div class="empty-icon">👥</div><p>لا توجد بيانات حضور مسجلة لهذا الشهر</p></div>`; return;
     }
-
-    const data = PARSED.attendanceData[key];
-    const t = data.totals;
+    const data = PARSED.attendanceData[key]; const t = data.totals;
     const rows = data.employees.map(emp => {
       let diffColor = emp.diffMins > 0 ? '#27AE60' : (emp.diffMins < 0 ? '#C0392B' : '#6B6B6B');
       let fw = emp.diffMins > 0 ? '800' : '500';
@@ -682,221 +664,221 @@ tr:hover td{background:rgba(107,29,74,0.03)}
         <div class="kpi"><div class="kpi-lbl">إجمالي الساعات الإضافية (OT)</div><div class="kpi-val" style="color:#27AE60; direction:ltr">+${t.totalOvertime}</div><div class="kpi-avg">ساعة</div></div>
         <div class="kpi"><div class="kpi-lbl">إجمالي ساعات النقص</div><div class="kpi-val" style="color:#C0392B; direction:ltr">-${t.totalShortage}</div><div class="kpi-avg">ساعة</div></div>
       </div>
-      <div class="tw">
-        <table>
-          <thead>
-            <tr><th style="text-align:right; background:#2980b9">الاسم</th><th style="text-align:right; background:#2980b9">الرقم الوظيفي</th><th style="background:#2980b9">ساعات مطلوبة</th><th style="background:#2980b9">ساعات العمل الفعلية</th><th style="background:#2980b9">الفرق (العمل الإضافي)</th></tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>`;
+      <div class="tw"><table><thead><tr><th style="text-align:right; background:#2980b9">الاسم</th><th style="text-align:right; background:#2980b9">الرقم الوظيفي</th><th style="background:#2980b9">ساعات مطلوبة</th><th style="background:#2980b9">ساعات العمل الفعلية</th><th style="background:#2980b9">الفرق (العمل الإضافي)</th></tr></thead><tbody>${rows}</tbody></table></div>`;
   }
 
   window.exportAttendance = function() {
-    const m = document.getElementById('attViewMonth').value;
-    const y = document.getElementById('attViewYear').value;
-    const key = y + '_' + m;
+    const m = document.getElementById('attViewMonth').value; const y = document.getElementById('attViewYear').value; const key = y + '_' + m;
     if(!PARSED.attendanceData || !PARSED.attendanceData[key]) return;
-    
     const dataToExport = PARSED.attendanceData[key].employees.map(emp => {
       const sign = emp.diffMins > 0 ? '+' : (emp.diffMins < 0 ? '-' : '');
       return {"الرقم الوظيفي": emp.id, "الاسم": emp.name, "ساعات العمل المطلوبة": emp.req, "ساعات العمل الفعلية": emp.worked, "الفرق (العمل الإضافي)": sign + emp.diffStr};
     });
-    
     const ws = XLSX.utils.json_to_sheet(dataToExport);
     if(!ws['!views']) ws['!views'] = []; ws['!views'].push({ rightToLeft: true });
     const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "العمل الإضافي");
     XLSX.writeFile(wb, `تقرير_الحضور_${y}_${m}.xlsx`);
   }
 
-  // ══════════════════════════════════════════════════════════════
-  // EVALUATION & INCENTIVES (UPDATED WITH FILTERS)
-  // ══════════════════════════════════════════════════════════════
   function buildEvaluationPanel() {
     const el = document.getElementById('panel-evaluation');
     let formMOpts = '', formYOpts = '<option value="2026">2026</option><option value="2025">2025</option>';
     let filtMOpts = '<option value="ALL">كل الأشهر</option>', filtYOpts = '<option value="ALL">كل السنوات</option>' + formYOpts;
     const monthsArr = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
-    monthsArr.forEach((mName, i) => { 
-       formMOpts += `<option value="${i+1}">${mName}</option>`; 
-       filtMOpts += `<option value="${i+1}">${mName}</option>`; 
-    });
+    monthsArr.forEach((mName, i) => { formMOpts += `<option value="${i+1}">${mName}</option>`; filtMOpts += `<option value="${i+1}">${mName}</option>`; });
 
     el.innerHTML = `
       <div class="eval-form">
         <h4>إضافة تقييم جديد ومسير حوافز</h4>
         <div class="eval-form-grid">
-          <div class="eval-input-grp" style="max-width:110px;">
-            <label>الشهر</label><select id="evalFormMonth">${formMOpts}</select>
-          </div>
-          <div class="eval-input-grp" style="max-width:110px;">
-            <label>السنة</label><select id="evalFormYear">${formYOpts}</select>
-          </div>
-          <div class="eval-input-grp">
-            <label>اسم الموظف</label><input type="text" id="evalName" placeholder="أدخل الاسم الثلاثي">
-          </div>
-          <div class="eval-input-grp">
-            <label>الوظيفة</label>
-            <select id="evalRole">
-              <option value="QHSE Supervisor">QHSE Supervisor</option><option value="Warehouse Supervisor">Warehouse Supervisor</option>
-              <option value="Data entry">Data entry</option><option value="Team Leader">Team Leader</option><option value="BT Operator">BT Operator</option>
-              <option value="Order Picker">Order Picker</option><option value="Cleaner">Cleaner</option><option value="Delivery man">Delivery man</option><option value="Driver">Driver</option>
-            </select>
-          </div>
-          <div class="eval-input-grp" style="max-width:150px;">
-            <label>التقييم (Achievement %)</label><input type="number" id="evalScore" placeholder="مثال: 95.5" step="0.01">
-          </div>
+          <div class="eval-input-grp" style="max-width:110px;"><label>الشهر</label><select id="evalFormMonth">${formMOpts}</select></div>
+          <div class="eval-input-grp" style="max-width:110px;"><label>السنة</label><select id="evalFormYear">${formYOpts}</select></div>
+          <div class="eval-input-grp"><label>اسم الموظف</label><input type="text" id="evalName" placeholder="أدخل الاسم الثلاثي"></div>
+          <div class="eval-input-grp"><label>الوظيفة</label><select id="evalRole"><option value="QHSE Supervisor">QHSE Supervisor</option><option value="Warehouse Supervisor">Warehouse Supervisor</option><option value="Data entry">Data entry</option><option value="Team Leader">Team Leader</option><option value="BT Operator">BT Operator</option><option value="Order Picker">Order Picker</option><option value="Cleaner">Cleaner</option><option value="Delivery man">Delivery man</option><option value="Driver">Driver</option></select></div>
+          <div class="eval-input-grp" style="max-width:150px;"><label>التقييم (Achievement %)</label><input type="number" id="evalScore" placeholder="مثال: 95.5" step="0.01"></div>
           <div><button class="btn-save-eval" onclick="window.addEvaluation()">حفظ التقييم</button></div>
         </div>
       </div>
-
       <div class="filter-bar">
         <div class="filter-selects">
            <strong style="color:var(--plum); margin-left:10px;">تصفية النتائج:</strong>
            <select id="evalFiltMonth" onchange="window.drawEvalTable()">${filtMOpts}</select>
            <select id="evalFiltYear" onchange="window.drawEvalTable()">${filtYOpts}</select>
         </div>
-        <button onclick="window.exportEvaluations()" style="background:var(--plum); color:#fff; border:none; padding:8px 16px; border-radius:8px; cursor:pointer; font-family:'Tajawal',sans-serif; font-size:0.8rem; font-weight:700; display:flex; align-items:center; gap:8px; transition:0.2s;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> تصدير مسير الحوافز (Excel)
-        </button>
+        <button onclick="window.exportEvaluations()" style="background:var(--plum); color:#fff; border:none; padding:8px 16px; border-radius:8px; cursor:pointer; font-family:'Tajawal',sans-serif; font-size:0.8rem; font-weight:700; display:flex; align-items:center; gap:8px; transition:0.2s;"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> تصدير مسير الحوافز (Excel)</button>
       </div>
+      <div class="tw"><table><thead><tr><th style="text-align:right; background:var(--plum-dark); width:100px;">الشهر/السنة</th><th style="text-align:right; background:var(--plum-dark);">تاريخ الإدخال</th><th style="text-align:right; background:var(--plum-dark);">اسم الموظف</th><th style="text-align:right; background:var(--plum-dark);">الوظيفة</th><th style="background:var(--plum-dark);">Achievement %</th><th style="background:var(--plum-dark);">Score % (الحافز)</th><th style="background:var(--plum-dark); width:80px;">إجراء</th></tr></thead><tbody id="evalTableBody"></tbody></table></div>`;
 
-      <div class="tw">
-        <table>
-          <thead>
-            <tr>
-              <th style="text-align:right; background:var(--plum-dark); width:100px;">الشهر/السنة</th>
-              <th style="text-align:right; background:var(--plum-dark);">تاريخ الإدخال</th>
-              <th style="text-align:right; background:var(--plum-dark);">اسم الموظف</th>
-              <th style="text-align:right; background:var(--plum-dark);">الوظيفة</th>
-              <th style="background:var(--plum-dark);">Achievement %</th>
-              <th style="background:var(--plum-dark);">Score % (الحافز)</th>
-              <th style="background:var(--plum-dark); width:80px;">إجراء</th>
-            </tr>
-          </thead>
-          <tbody id="evalTableBody"></tbody>
-        </table>
-      </div>
-    `;
-
-    const d = new Date();
-    document.getElementById('evalFormMonth').value = d.getMonth() + 1;
-    document.getElementById('evalFormYear').value = d.getFullYear();
-    // Default filter to current month
-    document.getElementById('evalFiltMonth').value = d.getMonth() + 1;
-    document.getElementById('evalFiltYear').value = d.getFullYear();
-
+    const d = new Date(); document.getElementById('evalFormMonth').value = d.getMonth() + 1; document.getElementById('evalFormYear').value = d.getFullYear();
+    document.getElementById('evalFiltMonth').value = d.getMonth() + 1; document.getElementById('evalFiltYear').value = d.getFullYear();
     window.drawEvalTable();
   }
 
   window.addEvaluation = function() {
-    const name = document.getElementById('evalName').value.trim();
-    const role = document.getElementById('evalRole').value;
-    const score = parseFloat(document.getElementById('evalScore').value);
-    const m = document.getElementById('evalFormMonth').value;
-    const y = document.getElementById('evalFormYear').value;
-
+    const name = document.getElementById('evalName').value.trim(); const role = document.getElementById('evalRole').value; const score = parseFloat(document.getElementById('evalScore').value);
+    const m = document.getElementById('evalFormMonth').value; const y = document.getElementById('evalFormYear').value;
     if(!name || isNaN(score)) { alert("الرجاء إدخال اسم الموظف ونسبة التقييم بشكل صحيح."); return; }
 
     let incentive = 0;
-    if (score > 120) incentive = 120;
-    else if (score >= 96.02) incentive = 100;
-    else if (score >= 94.01) incentive = 95;
-    else if (score >= 92.01) incentive = 85;
-    else if (score >= 90.0) incentive = 70;
-    else incentive = 0;
+    if (score > 120) incentive = 120; else if (score >= 96.02) incentive = 100; else if (score >= 94.01) incentive = 95;
+    else if (score >= 92.01) incentive = 85; else if (score >= 90.0) incentive = 70; else incentive = 0;
 
     if(!PARSED.evaluations) PARSED.evaluations = [];
-
-    PARSED.evaluations.push({
-      id: Date.now() + Math.random(),
-      month: m, year: y,
-      date: new Date().toLocaleDateString('en-GB'),
-      name: name, role: role, achievement: score, incentive: incentive
-    });
-
-    document.getElementById('evalName').value = '';
-    document.getElementById('evalScore').value = '';
+    PARSED.evaluations.push({ id: Date.now() + Math.random(), month: m, year: y, date: new Date().toLocaleDateString('en-GB'), name: name, role: role, achievement: score, incentive: incentive });
+    document.getElementById('evalName').value = ''; document.getElementById('evalScore').value = '';
     saveToCloud(); window.drawEvalTable();
   }
 
   window.drawEvalTable = function() {
-    const fm = document.getElementById('evalFiltMonth').value;
-    const fy = document.getElementById('evalFiltYear').value;
-    const tbody = document.getElementById('evalTableBody');
+    const fm = document.getElementById('evalFiltMonth').value; const fy = document.getElementById('evalFiltYear').value; const tbody = document.getElementById('evalTableBody');
+    if (!PARSED.evaluations || PARSED.evaluations.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px; color:var(--gray-300);">لا توجد تقييمات محفوظة حتى الآن</td></tr>'; return; }
 
-    if (!PARSED.evaluations || PARSED.evaluations.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px; color:var(--gray-300);">لا توجد تقييمات محفوظة حتى الآن</td></tr>';
-      return;
-    }
-
-    const filtered = PARSED.evaluations.filter(ev => {
-      // التوافق مع التقييمات القديمة التي لم يكن بها شهر وسنة
-      const evM = ev.month || "4"; const evY = ev.year || "2026";
-      const mMatch = fm === 'ALL' || evM == fm;
-      const yMatch = fy === 'ALL' || evY == fy;
-      return mMatch && yMatch;
-    });
-
-    if (filtered.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px; color:var(--gray-400);">لا توجد نتائج تطابق الفلتر المحدد</td></tr>';
-      return;
-    }
-
-    tbody.innerHTML = filtered.map(ev => {
-      let incentiveColor = ev.incentive >= 100 ? '#27AE60' : (ev.incentive > 0 ? '#B8923A' : '#C0392B');
-      const evM = ev.month || "4"; const evY = ev.year || "2026";
-      return `<tr>
-        <td style="text-align:right; font-weight:700;">${evM} - ${evY}</td>
-        <td style="text-align:right; font-size:0.7rem; color:var(--gray-600);">${ev.date}</td>
-        <td style="text-align:right; font-weight:700;">${ev.name}</td>
-        <td style="text-align:right; color:var(--plum); font-weight:600;">${ev.role}</td>
-        <td style="font-weight:700; direction:ltr;">${ev.achievement}%</td>
-        <td style="color:${incentiveColor}; font-weight:800; direction:ltr;">${ev.incentive}%</td>
-        <td><button class="btn-del-eval" onclick="window.deleteEvaluation('${ev.id}')">حذف ✕</button></td>
-      </tr>`;
-    }).join('');
-  }
-
-  window.deleteEvaluation = function(id) {
-    if(confirm('هل أنت متأكد من حذف هذا التقييم؟')) {
-      PARSED.evaluations = PARSED.evaluations.filter(e => String(e.id) !== String(id));
-      saveToCloud(); window.drawEvalTable();
-    }
-  }
-
-  window.exportEvaluations = function() {
-    const fm = document.getElementById('evalFiltMonth').value;
-    const fy = document.getElementById('evalFiltYear').value;
-
-    if(!PARSED.evaluations || PARSED.evaluations.length === 0) return;
-    
     const filtered = PARSED.evaluations.filter(ev => {
       const evM = ev.month || "4"; const evY = ev.year || "2026";
       return (fm === 'ALL' || evM == fm) && (fy === 'ALL' || evY == fy);
     });
 
-    if(filtered.length === 0) { alert("لا توجد بيانات لتصديرها بناءً على الفلتر الحالي."); return; }
+    if (filtered.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px; color:var(--gray-400);">لا توجد نتائج تطابق الفلتر المحدد</td></tr>'; return; }
 
-    const dataToExport = filtered.map(ev => {
-      return {
-        "الشهر/السنة": (ev.month || "4") + "-" + (ev.year || "2026"),
-        "تاريخ الإدخال": ev.date,
-        "الاسم": ev.name,
-        "الوظيفة": ev.role,
-        "التقييم (Achievement)": ev.achievement + "%",
-        "نسبة الحافز (Score)": ev.incentive + "%"
-      };
+    tbody.innerHTML = filtered.map(ev => {
+      let incentiveColor = ev.incentive >= 100 ? '#27AE60' : (ev.incentive > 0 ? '#B8923A' : '#C0392B');
+      const evM = ev.month || "4"; const evY = ev.year || "2026";
+      return `<tr><td style="text-align:right; font-weight:700;">${evM} - ${evY}</td><td style="text-align:right; font-size:0.7rem; color:var(--gray-600);">${ev.date}</td><td style="text-align:right; font-weight:700;">${ev.name}</td><td style="text-align:right; color:var(--plum); font-weight:600;">${ev.role}</td><td style="font-weight:700; direction:ltr;">${ev.achievement}%</td><td style="color:${incentiveColor}; font-weight:800; direction:ltr;">${ev.incentive}%</td><td><button class="btn-del-eval" onclick="window.deleteEvaluation('${ev.id}')">حذف ✕</button></td></tr>`;
+    }).join('');
+  }
+
+  window.deleteEvaluation = function(id) {
+    if(confirm('هل أنت متأكد من حذف هذا التقييم؟')) { PARSED.evaluations = PARSED.evaluations.filter(e => String(e.id) !== String(id)); saveToCloud(); window.drawEvalTable(); }
+  }
+
+  window.exportEvaluations = function() {
+    const fm = document.getElementById('evalFiltMonth').value; const fy = document.getElementById('evalFiltYear').value;
+    if(!PARSED.evaluations || PARSED.evaluations.length === 0) return;
+    const filtered = PARSED.evaluations.filter(ev => {
+      const evM = ev.month || "4"; const evY = ev.year || "2026";
+      return (fm === 'ALL' || evM == fm) && (fy === 'ALL' || evY == fy);
     });
-    
-    const ws = XLSX.utils.json_to_sheet(dataToExport);
-    if(!ws['!views']) ws['!views'] = []; ws['!views'].push({ rightToLeft: true });
+    if(filtered.length === 0) { alert("لا توجد بيانات لتصديرها."); return; }
+
+    const dataToExport = filtered.map(ev => { return {"الشهر/السنة": (ev.month || "4") + "-" + (ev.year || "2026"), "تاريخ الإدخال": ev.date, "الاسم": ev.name, "الوظيفة": ev.role, "التقييم (Achievement)": ev.achievement + "%", "نسبة الحافز (Score)": ev.incentive + "%"}; });
+    const ws = XLSX.utils.json_to_sheet(dataToExport); if(!ws['!views']) ws['!views'] = []; ws['!views'].push({ rightToLeft: true });
     const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "مسير الحوافز");
-    
-    let fName = `تقرير_الحوافز`;
-    if(fm !== 'ALL') fName += `_شهر_${fm}`;
-    if(fy !== 'ALL') fName += `_سنة_${fy}`;
+    let fName = `تقرير_الحوافز`; if(fm !== 'ALL') fName += `_شهر_${fm}`; if(fy !== 'ALL') fName += `_سنة_${fy}`;
     XLSX.writeFile(wb, fName + ".xlsx");
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // EQUIPMENT AND MAINTENANCE (NEW FEATURE)
+  // ══════════════════════════════════════════════════════════════
+  function buildEquipmentPanel() {
+    const el = document.getElementById('panel-equipment');
+    el.innerHTML = `
+      <div class="eval-form" style="border-color:var(--teal-light);">
+        <h4 style="color:var(--teal);">إضافة معدة / آلة جديدة</h4>
+        <div class="eval-form-grid">
+          <div class="eval-input-grp">
+            <label>اسم المعدة / الآلة</label>
+            <input type="text" id="equipName" placeholder="مثال: رافعة شوكية رقم 1">
+          </div>
+          <div class="eval-input-grp" style="max-width:180px;">
+            <label>ساعات التشغيل الحالية</label>
+            <input type="number" id="equipOpHours" placeholder="مثال: 1200" step="1">
+          </div>
+          <div class="eval-input-grp" style="max-width:180px;">
+            <label>موعد الصيانة (بالساعات)</label>
+            <input type="number" id="equipMaintHours" placeholder="مثال: 1500" step="1">
+          </div>
+          <div><button class="btn-save-eval" style="background:var(--teal); color:#fff;" onclick="window.addEquipment()">حفظ المعدة</button></div>
+        </div>
+      </div>
+      <div class="sec" style="color:var(--teal);">حالة المعدات والآلات</div>
+      <div class="tw">
+        <table>
+          <thead>
+            <tr>
+              <th style="text-align:right; background:var(--teal);">اسم المعدة</th>
+              <th style="background:var(--teal);">ساعات التشغيل الحالية</th>
+              <th style="background:var(--teal);">ساعات الصيانة المطلوبة</th>
+              <th style="background:var(--teal);">الساعات المتبقية للصيانة</th>
+              <th style="background:var(--teal);">الحالة</th>
+              <th style="background:var(--teal); width:80px;">إجراء</th>
+            </tr>
+          </thead>
+          <tbody id="equipTableBody"></tbody>
+        </table>
+      </div>
+    `;
+    window.drawEquipmentTable();
+  }
+
+  window.addEquipment = function() {
+    const name = document.getElementById('equipName').value.trim();
+    const opHours = parseFloat(document.getElementById('equipOpHours').value);
+    const maintHours = parseFloat(document.getElementById('equipMaintHours').value);
+
+    if(!name || isNaN(opHours) || isNaN(maintHours)) {
+        alert("الرجاء إدخال جميع بيانات المعدة بشكل صحيح.");
+        return;
+    }
+
+    if(!PARSED.equipment) PARSED.equipment = [];
+
+    PARSED.equipment.push({
+        id: Date.now() + Math.random(),
+        name: name,
+        opHours: opHours,
+        maintHours: maintHours
+    });
+
+    document.getElementById('equipName').value = '';
+    document.getElementById('equipOpHours').value = '';
+    document.getElementById('equipMaintHours').value = '';
+
+    saveToCloud();
+    window.drawEquipmentTable();
+  }
+
+  window.drawEquipmentTable = function() {
+    const tbody = document.getElementById('equipTableBody');
+    if (!PARSED.equipment || PARSED.equipment.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--gray-300);">لا توجد معدات مسجلة</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = PARSED.equipment.map(eq => {
+        const diff = eq.maintHours - eq.opHours;
+        let statusText = '';
+        let statusColor = '';
+        
+        if(diff <= 0) {
+            statusText = '🚨 تتطلب صيانة فورية';
+            statusColor = '#C0392B';
+        } else if(diff <= 100) {
+            statusText = '⚠️ اقترب موعد الصيانة';
+            statusColor = '#B8923A';
+        } else {
+            statusText = '✅ حالة سليمة';
+            statusColor = '#27AE60';
+        }
+
+        let diffText = diff > 0 ? `متبقي ${diff}` : `متجاوز بـ ${Math.abs(diff)}`;
+
+        return `<tr>
+          <td style="text-align:right; font-weight:700;">${eq.name}</td>
+          <td style="direction:ltr; font-weight:600;">${eq.opHours}</td>
+          <td style="direction:ltr; font-weight:600;">${eq.maintHours}</td>
+          <td style="direction:ltr; color:${statusColor}; font-weight:800;">${diffText}</td>
+          <td style="color:${statusColor}; font-weight:700;">${statusText}</td>
+          <td><button class="btn-del-eval" onclick="window.deleteEquipment('${eq.id}')">حذف ✕</button></td>
+        </tr>`;
+    }).join('');
+  }
+
+  window.deleteEquipment = function(id) {
+    if(confirm('هل أنت متأكد من حذف هذه المعدة؟')) {
+        PARSED.equipment = PARSED.equipment.filter(e => String(e.id) !== String(id));
+        saveToCloud(); window.drawEquipmentTable();
+    }
   }
 </script>
 </body>
