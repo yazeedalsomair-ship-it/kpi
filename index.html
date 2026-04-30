@@ -43,9 +43,9 @@ body{font-family:'Tajawal',sans-serif;background:var(--plum-deeper);color:var(--
 .splash-subtitle{text-align:center;opacity:0;animation:fade-up 0.8s ease 1.4s forwards;margin-bottom:50px}
 .splash-subtitle h2{font-size:1.3rem;font-weight:300;color:rgba(255,255,255,0.7);letter-spacing:1px}
 .splash-subtitle h2 span{color:var(--gold);font-weight:700}
-.wh-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:880px;width:90%;opacity:0;animation:cards-entrance 1s cubic-bezier(0.16,1,0.3,1) 1.8s forwards}
+.wh-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;max-width:1150px;width:95%;opacity:0;animation:cards-entrance 1s cubic-bezier(0.16,1,0.3,1) 1.8s forwards}
 @keyframes cards-entrance{0%{opacity:0;transform:translateY(50px)}100%{opacity:1;transform:translateY(0)}}
-.wh-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:36px 24px;text-align:center;cursor:pointer;transition:all 0.5s cubic-bezier(0.25,0.46,0.45,0.94);position:relative;overflow:hidden;backdrop-filter:blur(10px);}
+.wh-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:36px 20px;text-align:center;cursor:pointer;transition:all 0.5s cubic-bezier(0.25,0.46,0.45,0.94);position:relative;overflow:hidden;backdrop-filter:blur(10px);}
 .wh-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(212,168,67,0.08),transparent);opacity:0;transition:opacity 0.5s}
 .wh-card::after{content:'';position:absolute;bottom:0;left:50%;width:0;height:3px;background:var(--gold);transition:all 0.5s;transform:translateX(-50%);border-radius:3px 3px 0 0}
 .wh-card:hover{transform:translateY(-12px);border-color:rgba(212,168,67,0.3);box-shadow:0 30px 80px rgba(0,0,0,0.3),0 0 40px rgba(212,168,67,0.08)}
@@ -57,12 +57,14 @@ body{font-family:'Tajawal',sans-serif;background:var(--plum-deeper);color:var(--
 .wh-icon-alula{background:linear-gradient(135deg,rgba(107,29,74,0.2),rgba(139,45,98,0.3));border:1px solid rgba(139,45,98,0.3)}
 .wh-icon-yanbu{background:linear-gradient(135deg,rgba(13,115,119,0.2),rgba(20,163,168,0.3));border:1px solid rgba(20,163,168,0.3)}
 .wh-icon-dawadmi{background:linear-gradient(135deg,rgba(212,168,67,0.15),rgba(232,201,106,0.25));border:1px solid rgba(212,168,67,0.3)}
-.wh-name{font-size:1.2rem;font-weight:800;color:#fff;margin-bottom:6px;transition:color 0.3s;letter-spacing:0.5px}
-.wh-name-en{font-family:'Montserrat',sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.35);letter-spacing:2px;font-weight:600;text-transform:uppercase;margin-bottom:12px}
-.wh-desc{font-size:0.78rem;color:rgba(255,255,255,0.4);line-height:1.7}
+.wh-icon-sulayyil{background:linear-gradient(135deg,rgba(230,126,34,0.15),rgba(211,84,0,0.25));border:1px solid rgba(230,126,34,0.3)}
+.wh-name{font-size:1.15rem;font-weight:800;color:#fff;margin-bottom:6px;transition:color 0.3s;letter-spacing:0.5px}
+.wh-name-en{font-family:'Montserrat',sans-serif;font-size:0.65rem;color:rgba(255,255,255,0.35);letter-spacing:2px;font-weight:600;text-transform:uppercase;margin-bottom:12px}
+.wh-desc{font-size:0.75rem;color:rgba(255,255,255,0.4);line-height:1.7}
 .wh-card:nth-child(1){animation:card-stagger 0.8s cubic-bezier(0.16,1,0.3,1) 2s both}
 .wh-card:nth-child(2){animation:card-stagger 0.8s cubic-bezier(0.16,1,0.3,1) 2.15s both}
 .wh-card:nth-child(3){animation:card-stagger 0.8s cubic-bezier(0.16,1,0.3,1) 2.3s both}
+.wh-card:nth-child(4){animation:card-stagger 0.8s cubic-bezier(0.16,1,0.3,1) 2.45s both}
 @keyframes card-stagger{0%{opacity:0;transform:translateY(40px) scale(0.95)}100%{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes fade-up{0%{opacity:0;transform:translateY(20px)}100%{opacity:1;transform:translateY(0)}}
 
@@ -225,7 +227,8 @@ tr:hover td{background:rgba(107,29,74,0.03)}
 .footer{background:var(--plum-deeper);padding:20px 32px;text-align:center;color:rgba(255,255,255,0.3);font-size:0.75rem;margin-top:40px}
 
 /* ===== RESPONSIVE ===== */
-@media(max-width:900px){.wh-grid{grid-template-columns:1fr;max-width:340px}.splash-brand h1{font-size:2rem;letter-spacing:4px}}
+@media(max-width:1024px){.wh-grid{grid-template-columns:repeat(2,1fr);max-width:700px}}
+@media(max-width:600px){.wh-grid{grid-template-columns:1fr;max-width:340px}.splash-brand h1{font-size:2rem;letter-spacing:4px}}
 @media(max-width:768px){.header-inner{flex-wrap:wrap;gap:10px;justify-content:center}.container{padding:16px}.chart-row{grid-template-columns:1fr}.kpi-row{grid-template-columns:repeat(2,1fr)}.tab{padding:10px 14px;font-size:0.75rem}}
 </style>
 </head>
@@ -239,10 +242,21 @@ tr:hover td{background:rgba(107,29,74,0.03)}
   <div class="splash-brand"><h1>PROCEED</h1><p>Healthcare Logistics</p></div>
   <div class="splash-divider"></div>
   <div class="splash-subtitle"><h2>اختر <span>المستودع</span> للدخول إلى لوحة المؤشرات</h2></div>
+  
   <div class="wh-grid">
-    <div class="wh-card" onclick="window.selectWarehouse('alula','مستودع العلا','ALULA')"><div class="wh-icon wh-icon-alula">🏔️</div><div class="wh-name">مستودع العلا</div><div class="wh-name-en">ALULA WAREHOUSE</div><div class="wh-desc">منطقة العلا — المدينة المنورة<br>إدارة التوزيع والنقل الصحي</div></div>
-    <div class="wh-card" onclick="window.selectWarehouse('yanbu','مستودع ينبع','YANBU')"><div class="wh-icon wh-icon-yanbu">⚓</div><div class="wh-name">مستودع ينبع</div><div class="wh-name-en">YANBU WAREHOUSE</div><div class="wh-desc">ينبع الصناعية — المدينة المنورة<br>مركز اللوجستيات البحرية</div></div>
-    <div class="wh-card" onclick="window.selectWarehouse('dawadmi','مستودع الدوادمي','DAWADMI')"><div class="wh-icon wh-icon-dawadmi">🌾</div><div class="wh-name">مستودع الدوادمي</div><div class="wh-name-en">DAWADMI WAREHOUSE</div><div class="wh-desc">محافظة الدوادمي — الرياض<br>مركز التوزيع المركزي</div></div>
+    <div class="wh-card" onclick="window.selectWarehouse('alula','مستودع العلا','ALULA')">
+        <div class="wh-icon wh-icon-alula">🏔️</div><div class="wh-name">مستودع العلا</div><div class="wh-name-en">ALULA WAREHOUSE</div><div class="wh-desc">منطقة العلا — المدينة المنورة<br>إدارة التوزيع والنقل الصحي</div>
+    </div>
+    <div class="wh-card" onclick="window.selectWarehouse('yanbu','مستودع ينبع','YANBU')">
+        <div class="wh-icon wh-icon-yanbu">⚓</div><div class="wh-name">مستودع ينبع</div><div class="wh-name-en">YANBU WAREHOUSE</div><div class="wh-desc">ينبع الصناعية — المدينة المنورة<br>مركز اللوجستيات البحرية</div>
+    </div>
+    <div class="wh-card" onclick="window.selectWarehouse('dawadmi','مستودع الدوادمي','DAWADMI')">
+        <div class="wh-icon wh-icon-dawadmi">🌾</div><div class="wh-name">مستودع الدوادمي</div><div class="wh-name-en">DAWADMI WAREHOUSE</div><div class="wh-desc">محافظة الدوادمي — الرياض<br>مركز التوزيع المركزي</div>
+    </div>
+    <!-- مستودع السليل الجديد -->
+    <div class="wh-card" onclick="window.selectWarehouse('sulayyil','مستودع السليل','SULAYYIL')">
+        <div class="wh-icon wh-icon-sulayyil">🌴</div><div class="wh-name">مستودع السليل</div><div class="wh-name-en">SULAYYIL WAREHOUSE</div><div class="wh-desc">محافظة السليل — الرياض<br>مركز التوزيع الجنوبي</div>
+    </div>
   </div>
 </div>
 
@@ -429,7 +443,8 @@ tr:hover td{background:rgba(107,29,74,0.03)}
         PARSED = docSnap.data().dashboardData; 
         if (PARSED.attendance && !PARSED.attendanceData) { PARSED.attendanceData = { "2026_4": PARSED.attendance }; delete PARSED.attendance; }
         if(!PARSED.evaluations) PARSED.evaluations = [];
-        if(!PARSED.equipment) PARSED.equipment = []; // إضافة تهيئة المعدات السحابية
+        if(!PARSED.equipment) PARSED.equipment = []; 
+        if(!PARSED.equipmentCounts) PARSED.equipmentCounts = {reachTruck:0, handJack:0, pestControl:0, cleaningMachine:0, cageCart:0, truck10t:0, truck5t:0};
         
         updateStatus(); buildDash();
         
@@ -603,7 +618,7 @@ tr:hover td{background:rgba(107,29,74,0.03)}
 
   function buildDash(){
     const dm=getMergedParsed('madinah'), da=getMergedParsed('alula'), ds=PARSED.asn, dob=PARSED.outbound, datt=PARSED.attendanceData;
-    const any = dm||da||ds||dob||datt||(PARSED.evaluations && PARSED.evaluations.length > 0) || (PARSED.equipment && PARSED.equipment.length > 0);
+    const any = dm||da||ds||dob||datt||(PARSED.evaluations && PARSED.evaluations.length > 0) || (PARSED.equipmentCounts) || (PARSED.equipment && PARSED.equipment.length > 0);
     document.getElementById('dash').style.display=any?'block':'none';
     if(!any)return;
     buildOV(dm,da,ds); buildPanel('madinah',dm,'#0F6E56','طلبات','لاينات',false); buildPanel('alula',da,'#6B1D4A','طلبات','لاينات',false);
@@ -768,13 +783,48 @@ tr:hover td{background:rgba(107,29,74,0.03)}
   }
 
   // ══════════════════════════════════════════════════════════════
-  // EQUIPMENT AND MAINTENANCE (NEW FEATURE)
+  // EQUIPMENT AND MAINTENANCE
   // ══════════════════════════════════════════════════════════════
   function buildEquipmentPanel() {
     const el = document.getElementById('panel-equipment');
+    if(!PARSED.equipmentCounts) PARSED.equipmentCounts = {reachTruck:0, handJack:0, pestControl:0, cleaningMachine:0, cageCart:0, truck10t:0, truck5t:0};
+    const c = PARSED.equipmentCounts;
+
     el.innerHTML = `
+      <div class="sec" style="color:var(--teal);">أعداد الأصول والمعدات الأساسية (جرد مستمر)</div>
+      <div class="kpi-row" style="grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); margin-bottom:30px;">
+         <div class="kpi" style="border-right-color:var(--teal); text-align:center; padding:15px 10px;">
+           <div style="font-size:24px; margin-bottom:5px;">🚜</div><div class="kpi-lbl" style="font-size:0.65rem;">Reach Truck</div>
+           <input type="number" value="${c.reachTruck}" onchange="window.updateEquipCount('reachTruck', this.value)" style="width:60px;text-align:center;padding:5px;border:1px solid var(--gray-300);border-radius:6px;font-weight:bold;color:var(--teal);font-size:1rem;">
+         </div>
+         <div class="kpi" style="border-right-color:var(--teal); text-align:center; padding:15px 10px;">
+           <div style="font-size:24px; margin-bottom:5px;">🚎</div><div class="kpi-lbl" style="font-size:0.65rem;">Hand Jack</div>
+           <input type="number" value="${c.handJack}" onchange="window.updateEquipCount('handJack', this.value)" style="width:60px;text-align:center;padding:5px;border:1px solid var(--gray-300);border-radius:6px;font-weight:bold;color:var(--teal);font-size:1rem;">
+         </div>
+         <div class="kpi" style="border-right-color:var(--teal); text-align:center; padding:15px 10px;">
+           <div style="font-size:24px; margin-bottom:5px;">🪲</div><div class="kpi-lbl" style="font-size:0.65rem;">Pest Control</div>
+           <input type="number" value="${c.pestControl}" onchange="window.updateEquipCount('pestControl', this.value)" style="width:60px;text-align:center;padding:5px;border:1px solid var(--gray-300);border-radius:6px;font-weight:bold;color:var(--teal);font-size:1rem;">
+         </div>
+         <div class="kpi" style="border-right-color:var(--teal); text-align:center; padding:15px 10px;">
+           <div style="font-size:24px; margin-bottom:5px;">🧹</div><div class="kpi-lbl" style="font-size:0.65rem;">Clean Machine</div>
+           <input type="number" value="${c.cleaningMachine}" onchange="window.updateEquipCount('cleaningMachine', this.value)" style="width:60px;text-align:center;padding:5px;border:1px solid var(--gray-300);border-radius:6px;font-weight:bold;color:var(--teal);font-size:1rem;">
+         </div>
+         <div class="kpi" style="border-right-color:var(--teal); text-align:center; padding:15px 10px;">
+           <div style="font-size:24px; margin-bottom:5px;">🛒</div><div class="kpi-lbl" style="font-size:0.65rem;">Cage Cart</div>
+           <input type="number" value="${c.cageCart}" onchange="window.updateEquipCount('cageCart', this.value)" style="width:60px;text-align:center;padding:5px;border:1px solid var(--gray-300);border-radius:6px;font-weight:bold;color:var(--teal);font-size:1rem;">
+         </div>
+         <div class="kpi" style="border-right-color:var(--teal); text-align:center; padding:15px 10px;">
+           <div style="font-size:24px; margin-bottom:5px;">🚛</div><div class="kpi-lbl" style="font-size:0.65rem;">10-ton Truck</div>
+           <input type="number" value="${c.truck10t}" onchange="window.updateEquipCount('truck10t', this.value)" style="width:60px;text-align:center;padding:5px;border:1px solid var(--gray-300);border-radius:6px;font-weight:bold;color:var(--teal);font-size:1rem;">
+         </div>
+         <div class="kpi" style="border-right-color:var(--teal); text-align:center; padding:15px 10px;">
+           <div style="font-size:24px; margin-bottom:5px;">🚚</div><div class="kpi-lbl" style="font-size:0.65rem;">5-ton Truck</div>
+           <input type="number" value="${c.truck5t}" onchange="window.updateEquipCount('truck5t', this.value)" style="width:60px;text-align:center;padding:5px;border:1px solid var(--gray-300);border-radius:6px;font-weight:bold;color:var(--teal);font-size:1rem;">
+         </div>
+      </div>
+
       <div class="eval-form" style="border-color:var(--teal-light);">
-        <h4 style="color:var(--teal);">إضافة معدة / آلة جديدة</h4>
+        <h4 style="color:var(--teal);">إضافة معدة / آلة لتتبع الصيانة</h4>
         <div class="eval-form-grid">
           <div class="eval-input-grp">
             <label>اسم المعدة / الآلة</label>
@@ -811,66 +861,40 @@ tr:hover td{background:rgba(107,29,74,0.03)}
     window.drawEquipmentTable();
   }
 
+  window.updateEquipCount = function(key, val) {
+     if(!PARSED.equipmentCounts) PARSED.equipmentCounts = {reachTruck:0, handJack:0, pestControl:0, cleaningMachine:0, cageCart:0, truck10t:0, truck5t:0};
+     PARSED.equipmentCounts[key] = parseInt(val) || 0;
+     saveToCloud();
+  }
+
   window.addEquipment = function() {
     const name = document.getElementById('equipName').value.trim();
     const opHours = parseFloat(document.getElementById('equipOpHours').value);
     const maintHours = parseFloat(document.getElementById('equipMaintHours').value);
 
-    if(!name || isNaN(opHours) || isNaN(maintHours)) {
-        alert("الرجاء إدخال جميع بيانات المعدة بشكل صحيح.");
-        return;
-    }
-
+    if(!name || isNaN(opHours) || isNaN(maintHours)) { alert("الرجاء إدخال جميع بيانات المعدة بشكل صحيح."); return; }
     if(!PARSED.equipment) PARSED.equipment = [];
 
-    PARSED.equipment.push({
-        id: Date.now() + Math.random(),
-        name: name,
-        opHours: opHours,
-        maintHours: maintHours
-    });
-
-    document.getElementById('equipName').value = '';
-    document.getElementById('equipOpHours').value = '';
-    document.getElementById('equipMaintHours').value = '';
-
-    saveToCloud();
-    window.drawEquipmentTable();
+    PARSED.equipment.push({ id: Date.now() + Math.random(), name: name, opHours: opHours, maintHours: maintHours });
+    document.getElementById('equipName').value = ''; document.getElementById('equipOpHours').value = ''; document.getElementById('equipMaintHours').value = '';
+    saveToCloud(); window.drawEquipmentTable();
   }
 
   window.drawEquipmentTable = function() {
     const tbody = document.getElementById('equipTableBody');
     if (!PARSED.equipment || PARSED.equipment.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--gray-300);">لا توجد معدات مسجلة</td></tr>';
-      return;
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--gray-300);">لا توجد معدات مسجلة لتتبع صيانتها</td></tr>'; return;
     }
 
     tbody.innerHTML = PARSED.equipment.map(eq => {
         const diff = eq.maintHours - eq.opHours;
-        let statusText = '';
-        let statusColor = '';
-        
-        if(diff <= 0) {
-            statusText = '🚨 تتطلب صيانة فورية';
-            statusColor = '#C0392B';
-        } else if(diff <= 100) {
-            statusText = '⚠️ اقترب موعد الصيانة';
-            statusColor = '#B8923A';
-        } else {
-            statusText = '✅ حالة سليمة';
-            statusColor = '#27AE60';
-        }
-
+        let statusText = ''; let statusColor = '';
+        if(diff <= 0) { statusText = '🚨 تتطلب صيانة فورية'; statusColor = '#C0392B'; }
+        else if(diff <= 100) { statusText = '⚠️ اقترب موعد الصيانة'; statusColor = '#B8923A'; }
+        else { statusText = '✅ حالة سليمة'; statusColor = '#27AE60'; }
         let diffText = diff > 0 ? `متبقي ${diff}` : `متجاوز بـ ${Math.abs(diff)}`;
 
-        return `<tr>
-          <td style="text-align:right; font-weight:700;">${eq.name}</td>
-          <td style="direction:ltr; font-weight:600;">${eq.opHours}</td>
-          <td style="direction:ltr; font-weight:600;">${eq.maintHours}</td>
-          <td style="direction:ltr; color:${statusColor}; font-weight:800;">${diffText}</td>
-          <td style="color:${statusColor}; font-weight:700;">${statusText}</td>
-          <td><button class="btn-del-eval" onclick="window.deleteEquipment('${eq.id}')">حذف ✕</button></td>
-        </tr>`;
+        return `<tr><td style="text-align:right; font-weight:700;">${eq.name}</td><td style="direction:ltr; font-weight:600;">${eq.opHours}</td><td style="direction:ltr; font-weight:600;">${eq.maintHours}</td><td style="direction:ltr; color:${statusColor}; font-weight:800;">${diffText}</td><td style="color:${statusColor}; font-weight:700;">${statusText}</td><td><button class="btn-del-eval" onclick="window.deleteEquipment('${eq.id}')">حذف ✕</button></td></tr>`;
     }).join('');
   }
 
