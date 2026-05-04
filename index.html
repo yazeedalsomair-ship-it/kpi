@@ -237,6 +237,51 @@ tr:hover td{background:rgba(107,29,74,0.03)}
 @media(max-width:700px){.wh-grid{grid-template-columns:repeat(2,1fr);max-width:500px}}
 @media(max-width:400px){.wh-grid{grid-template-columns:1fr;max-width:340px}.splash-brand h1{font-size:2rem;letter-spacing:4px}}
 @media(max-width:768px){.header-inner{flex-wrap:wrap;gap:10px;justify-content:center}.container{padding:16px}.chart-row{grid-template-columns:1fr}.kpi-row{grid-template-columns:repeat(2,1fr)}.tab{padding:10px 14px;font-size:0.75rem}}
+
+/* ══════ EVALUATION PANEL ══════ */
+.eval-upload-zone{background:#fff;border:2px dashed var(--gray-200);border-radius:var(--radius);padding:24px;margin-bottom:20px;transition:.3s}
+.eval-upload-zone.has-file{border-color:var(--plum);border-style:solid;background:#fdf5f9}
+.eval-upload-inner{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.eval-upload-btn{background:var(--plum);color:#fff;border:none;padding:10px 20px;border-radius:10px;font-family:'Tajawal',sans-serif;font-weight:700;font-size:0.85rem;cursor:pointer;display:flex;align-items:center;gap:8px;transition:.2s;white-space:nowrap}
+.eval-upload-btn:hover{background:var(--plum-dark)}
+.eval-upload-info{font-size:0.8rem;color:var(--gray-600)}
+.eval-file-name{font-weight:700;color:var(--plum)}
+.eval-summary-bar{display:flex;align-items:center;gap:12px;background:#f8fafd;border:1px solid var(--gray-200);border-radius:10px;padding:10px 16px;margin-bottom:16px;flex-wrap:wrap}
+.eval-summary-item{font-size:0.78rem;color:var(--gray-600)}
+.eval-summary-item strong{color:var(--maw-navy);font-weight:800}
+.eval-table-wrap{overflow-x:auto;border:1px solid var(--gray-200);border-radius:12px;margin-bottom:16px}
+.eval-table{width:100%;border-collapse:collapse;font-size:12px;min-width:900px}
+.eval-table th{background:var(--maw-navy);color:#fff;padding:9px 12px;text-align:right;font-weight:600;font-size:11px;white-space:nowrap}
+.eval-table th.center{text-align:center}
+.eval-table td{padding:8px 12px;border-bottom:1px solid var(--gray-100);text-align:right;vertical-align:middle}
+.eval-table tr:last-child td{border-bottom:none}
+.eval-table tr:nth-child(even) td{background:#fafafa}
+.eval-table tr:hover td{background:#f5f0f8}
+.eval-score-input{width:70px;padding:5px 8px;border:1.5px solid var(--gray-200);border-radius:8px;text-align:center;font-weight:700;font-size:13px;font-family:'Tajawal',sans-serif;transition:.2s;direction:ltr}
+.eval-score-input:focus{outline:none;border-color:var(--plum);box-shadow:0 0 0 3px rgba(158,31,98,0.1)}
+.eval-notes-input{width:130px;padding:5px 8px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:11px;font-family:'Tajawal',sans-serif;transition:.2s}
+.eval-notes-input:focus{outline:none;border-color:var(--maw-cyan)}
+.incentive-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:800;min-width:50px;text-align:center}
+.ib-100{background:#D5F5E3;color:#0F6E56}
+.ib-95{background:#EBF5FB;color:#1A5276}
+.ib-85{background:#FEF9E7;color:#7D6608}
+.ib-70{background:#FAEBD7;color:#B7770D}
+.ib-0{background:#FDEDEC;color:#C0392B}
+.eval-action-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+.btn-save-all-eval{background:var(--plum);color:#fff;border:none;padding:10px 22px;border-radius:10px;font-family:'Tajawal',sans-serif;font-weight:700;font-size:0.85rem;cursor:pointer;display:flex;align-items:center;gap:8px;transition:.2s}
+.btn-save-all-eval:hover{background:var(--plum-dark)}
+.btn-export-eval{background:var(--maw-navy);color:#fff;border:none;padding:10px 18px;border-radius:10px;font-family:'Tajawal',sans-serif;font-weight:700;font-size:0.85rem;cursor:pointer;display:flex;align-items:center;gap:8px;transition:.2s}
+.btn-export-eval:hover{background:#001040}
+.eval-filter-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.eval-filter-bar select{padding:7px 10px;border:1.5px solid var(--gray-200);border-radius:8px;font-family:'Tajawal',sans-serif;font-size:0.8rem;outline:none}
+.eval-search{padding:7px 12px;border:1.5px solid var(--gray-200);border-radius:8px;font-family:'Tajawal',sans-serif;font-size:0.8rem;outline:none;min-width:180px}
+.eval-search:focus{border-color:var(--plum)}
+.eval-empty{text-align:center;padding:40px;color:var(--gray-300);font-size:0.9rem}
+.eval-stat{background:#fff;border-radius:10px;padding:10px 14px;border:1px solid var(--gray-100);text-align:center;min-width:90px}
+.eval-stat-num{font-size:1.4rem;font-weight:800;color:var(--plum)}
+.eval-stat-lbl{font-size:10px;color:var(--gray-600);font-weight:500;margin-top:2px}
+.nat-flag{font-size:11px;background:var(--gray-100);padding:1px 7px;border-radius:10px;color:var(--gray-600)}
+
 </style>
 </head>
 <body>
@@ -715,94 +760,347 @@ tr:hover td{background:rgba(107,29,74,0.03)}
     XLSX.writeFile(wb, `تقرير_الحضور_${y}_${m}.xlsx`);
   }
 
+  // ══════════════════════════════════════════════════════════════
+  // EVALUATION PANEL — Headcount-driven
+  // ══════════════════════════════════════════════════════════════
   function buildEvaluationPanel() {
     const el = document.getElementById('panel-evaluation');
-    let formMOpts = '', formYOpts = '<option value="2026">2026</option><option value="2025">2025</option>';
-    let filtMOpts = '<option value="ALL">كل الأشهر</option>', filtYOpts = '<option value="ALL">كل السنوات</option>' + formYOpts;
-    const monthsArr = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
-    monthsArr.forEach((mName, i) => { formMOpts += `<option value="${i+1}">${mName}</option>`; filtMOpts += `<option value="${i+1}">${mName}</option>`; });
-
     el.innerHTML = `
-      <div class="eval-form">
-        <h4>إضافة تقييم جديد ومسير حوافز</h4>
-        <div class="eval-form-grid">
-          <div class="eval-input-grp" style="max-width:110px;"><label>الشهر</label><select id="evalFormMonth">${formMOpts}</select></div>
-          <div class="eval-input-grp" style="max-width:110px;"><label>السنة</label><select id="evalFormYear">${formYOpts}</select></div>
-          <div class="eval-input-grp"><label>اسم الموظف</label><input type="text" id="evalName" placeholder="أدخل الاسم الثلاثي"></div>
-          <div class="eval-input-grp"><label>الوظيفة</label><select id="evalRole"><option value="QHSE Supervisor">QHSE Supervisor</option><option value="Warehouse Supervisor">Warehouse Supervisor</option><option value="Data entry">Data entry</option><option value="Team Leader">Team Leader</option><option value="BT Operator">BT Operator</option><option value="Order Picker">Order Picker</option><option value="Cleaner">Cleaner</option><option value="Delivery man">Delivery man</option><option value="Driver">Driver</option></select></div>
-          <div class="eval-input-grp" style="max-width:150px;"><label>التقييم (Achievement %)</label><input type="number" id="evalScore" placeholder="مثال: 95.5" step="0.01"></div>
-          <div><button class="btn-save-eval" onclick="window.addEvaluation()">حفظ التقييم</button></div>
+      <!-- Upload Zone -->
+      <div class="eval-upload-zone" id="evalUploadZone">
+        <div class="eval-upload-inner">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--maw-navy);margin-bottom:4px">📋 رفع ملف Headcount</div>
+            <div class="eval-upload-info">ارفع ملف الـ Headcount بنفس الصيغة المعتمدة — سيظهر جدول الموظفين تلقائياً</div>
+          </div>
+          <label class="eval-upload-btn" style="cursor:pointer">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>
+            اختر الملف
+            <input type="file" accept=".xlsx,.xls" style="display:none" onchange="window.loadHeadcount(this)">
+          </label>
+          <div id="evalFileInfo" style="display:none;font-size:12px">
+            <span class="eval-file-name" id="evalFileName"></span>
+            <span style="color:var(--gray-600);margin-right:6px" id="evalFileCount"></span>
+          </div>
         </div>
       </div>
-      <div class="filter-bar">
-        <div class="filter-selects">
-           <strong style="color:var(--plum); margin-left:10px;">تصفية النتائج:</strong>
-           <select id="evalFiltMonth" onchange="window.drawEvalTable()">${filtMOpts}</select>
-           <select id="evalFiltYear" onchange="window.drawEvalTable()">${filtYOpts}</select>
-        </div>
-        <button onclick="window.exportEvaluations()" style="background:var(--plum); color:#fff; border:none; padding:8px 16px; border-radius:8px; cursor:pointer; font-family:'Tajawal',sans-serif; font-size:0.8rem; font-weight:700; display:flex; align-items:center; gap:8px; transition:0.2s;"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> تصدير مسير الحوافز (Excel)</button>
+
+      <!-- Month/Year for evaluation -->
+      <div class="eval-filter-bar" style="background:#fff;padding:12px 16px;border-radius:10px;border:1px solid var(--gray-100);margin-bottom:14px">
+        <span style="font-size:12px;font-weight:700;color:var(--maw-navy)">📅 فترة التقييم:</span>
+        <select id="evalMonth" onchange="window.drawEvalGrid()" style="padding:7px 10px;border:1.5px solid var(--gray-200);border-radius:8px;font-family:'Tajawal',sans-serif">
+          <option value="1">يناير</option><option value="2">فبراير</option><option value="3">مارس</option>
+          <option value="4">أبريل</option><option value="5">مايو</option><option value="6">يونيو</option>
+          <option value="7">يوليو</option><option value="8">أغسطس</option><option value="9">سبتمبر</option>
+          <option value="10">أكتوبر</option><option value="11">نوفمبر</option><option value="12">ديسمبر</option>
+        </select>
+        <select id="evalYear" onchange="window.drawEvalGrid()" style="padding:7px 10px;border:1.5px solid var(--gray-200);border-radius:8px;font-family:'Tajawal',sans-serif">
+          <option value="2026">2026</option><option value="2025">2025</option>
+        </select>
+        <input class="eval-search" id="evalSearch" placeholder="🔍 بحث بالاسم أو الوظيفة..." oninput="window.drawEvalGrid()">
+        <select id="evalFiltRole" onchange="window.drawEvalGrid()" style="padding:7px 10px;border:1.5px solid var(--gray-200);border-radius:8px;font-family:'Tajawal',sans-serif">
+          <option value="ALL">كل الوظائف</option>
+        </select>
       </div>
-      <div class="tw"><table><thead><tr><th style="text-align:right; background:var(--plum-dark); width:100px;">الشهر/السنة</th><th style="text-align:right; background:var(--plum-dark);">تاريخ الإدخال</th><th style="text-align:right; background:var(--plum-dark);">اسم الموظف</th><th style="text-align:right; background:var(--plum-dark);">الوظيفة</th><th style="background:var(--plum-dark);">Achievement %</th><th style="background:var(--plum-dark);">Score % (الحافز)</th><th style="background:var(--plum-dark); width:80px;">إجراء</th></tr></thead><tbody id="evalTableBody"></tbody></table></div>`;
 
-    const d = new Date(); document.getElementById('evalFormMonth').value = d.getMonth() + 1; document.getElementById('evalFormYear').value = d.getFullYear();
-    document.getElementById('evalFiltMonth').value = d.getMonth() + 1; document.getElementById('evalFiltYear').value = d.getFullYear();
-    window.drawEvalTable();
+      <!-- Stats bar -->
+      <div id="evalStatsBar" style="display:none;gap:10px;flex-wrap:wrap;margin-bottom:14px;display:flex"></div>
+
+      <!-- Table -->
+      <div id="evalTableContainer">
+        <div class="eval-empty">📂 ارفع ملف Headcount لعرض الموظفين</div>
+      </div>
+
+      <!-- Action bar -->
+      <div class="eval-action-bar" id="evalActionBar" style="display:none">
+        <button class="btn-save-all-eval" onclick="window.saveAllEvaluations()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
+          حفظ التقييمات
+        </button>
+        <button class="btn-export-eval" onclick="window.exportEvaluations()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+          تصدير Excel
+        </button>
+        <span id="evalSaveStatus" style="font-size:11px;color:var(--green);display:none;font-weight:700">✓ تم الحفظ</span>
+      </div>
+    `;
+
+    // Set current month/year
+    const d = new Date();
+    document.getElementById('evalMonth').value = d.getMonth() + 1;
+    document.getElementById('evalYear').value = d.getFullYear();
+    window.drawEvalGrid();
   }
 
-  window.addEvaluation = function() {
-    const name = document.getElementById('evalName').value.trim(); const role = document.getElementById('evalRole').value; const score = parseFloat(document.getElementById('evalScore').value);
-    const m = document.getElementById('evalFormMonth').value; const y = document.getElementById('evalFormYear').value;
-    if(!name || isNaN(score)) { alert("الرجاء إدخال اسم الموظف ونسبة التقييم بشكل صحيح."); return; }
+  // ── Parse Headcount Excel ─────────────────────────────────────
+  window.loadHeadcount = function(input) {
+    const file = input.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const wb = XLSX.read(e.target.result, {type:'array', cellDates:true});
+        // Pick best sheet: prefer 'our data' > 'Sheet1' > first
+        const sheetPriority = ['our data','Sheet1'];
+        let sn = wb.SheetNames[0];
+        for(const p of sheetPriority) { if(wb.SheetNames.includes(p)){sn=p;break;} }
+        const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], {defval:''});
+        if(!rows.length) { alert('الملف فارغ أو الصيغة غير مدعومة'); return; }
 
-    let incentive = 0;
-    if (score > 120) incentive = 120; else if (score >= 96.02) incentive = 100; else if (score >= 94.01) incentive = 95;
-    else if (score >= 92.01) incentive = 85; else if (score >= 90.0) incentive = 70; else incentive = 0;
+        // Flexible column mapping
+        const firstKeys = Object.keys(rows[0]);
+        const gv = (row, patterns) => {
+          const k = firstKeys.find(k => patterns.some(p => k.toLowerCase().includes(p.toLowerCase())));
+          return k ? String(row[k]||'').trim() : '';
+        };
 
-    if(!PARSED.evaluations) PARSED.evaluations = [];
-    PARSED.evaluations.push({ id: Date.now() + Math.random(), month: m, year: y, date: new Date().toLocaleDateString('en-GB'), name: name, role: role, achievement: score, incentive: incentive });
-    document.getElementById('evalName').value = ''; document.getElementById('evalScore').value = '';
-    saveToCloud(); window.drawEvalTable();
-  }
+        const employees = [];
+        for(const row of rows) {
+          const name = gv(row,['name','اسم']);
+          if(!name || name.toLowerCase()==='name') continue;
+          // Get PROCEED ID (prefer PROCEED col, fallback to ID)
+          const proceedId = gv(row,['proceed']) || gv(row,['id']);
+          const role = gv(row,['current role','current job title','current']);
+          const offRole = gv(row,['official job role','official']);
+          const company = gv(row,['company','شركة']);
+          const nationality = gv(row,['nationality','جنسية']);
+          const section = gv(row,['section','قسم']);
+          const manager = gv(row,['direct manager','مدير']);
+          const mobile = gv(row,['mobile','جوال']);
+          const location = gv(row,['location','موقع']);
 
-  window.drawEvalTable = function() {
-    const fm = document.getElementById('evalFiltMonth').value; const fy = document.getElementById('evalFiltYear').value; const tbody = document.getElementById('evalTableBody');
-    if (!PARSED.evaluations || PARSED.evaluations.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px; color:var(--gray-300);">لا توجد تقييمات محفوظة حتى الآن</td></tr>'; return; }
+          employees.push({
+            id: proceedId,
+            name,
+            role: role||offRole||'—',
+            company: company||'—',
+            nationality: nationality||'—',
+            section: section||'—',
+            manager: manager||'—',
+            mobile: mobile||'—',
+            location: location||'—',
+            score: null, notes: ''
+          });
+        }
 
-    const filtered = PARSED.evaluations.filter(ev => {
-      const evM = ev.month || "4"; const evY = ev.year || "2026";
-      return (fm === 'ALL' || evM == fm) && (fy === 'ALL' || evY == fy);
+        if(!employees.length) { alert('لم يتم العثور على بيانات موظفين'); return; }
+
+        // Restore saved scores from PARSED.evaluations if any
+        const savedEvals = PARSED.evaluations || [];
+        const m = document.getElementById('evalMonth').value;
+        const y = document.getElementById('evalYear').value;
+        for(const emp of employees) {
+          const saved = savedEvals.find(ev => ev.proceedId===emp.id && ev.month==m && ev.year==y);
+          if(saved) { emp.score=saved.achievement; emp.notes=saved.notes||''; }
+        }
+
+        PARSED.headcountEmployees = employees;
+
+        // Update UI
+        document.getElementById('evalUploadZone').classList.add('has-file');
+        document.getElementById('evalFileInfo').style.display = 'block';
+        document.getElementById('evalFileName').textContent = file.name;
+        document.getElementById('evalFileCount').textContent = `(${employees.length} موظف)`;
+
+        // Build role filter
+        const roles = [...new Set(employees.map(e=>e.role).filter(r=>r&&r!=='—'))].sort();
+        const rolesSel = document.getElementById('evalFiltRole');
+        rolesSel.innerHTML = '<option value="ALL">كل الوظائف</option>' +
+          roles.map(r=>`<option value="${r}">${r}</option>`).join('');
+
+        window.drawEvalGrid();
+      } catch(err) {
+        console.error(err);
+        alert('خطأ في قراءة الملف: ' + err.message);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  // ── Draw evaluation grid ──────────────────────────────────────
+  window.drawEvalGrid = function() {
+    const container = document.getElementById('evalTableContainer');
+    const statsBar = document.getElementById('evalStatsBar');
+    const actionBar = document.getElementById('evalActionBar');
+    const emps = PARSED.headcountEmployees;
+    if(!emps || !emps.length) {
+      container.innerHTML = '<div class="eval-empty">📂 ارفع ملف Headcount لعرض الموظفين</div>';
+      statsBar.style.display='none'; actionBar.style.display='none';
+      return;
+    }
+
+    const search = (document.getElementById('evalSearch')?.value||'').toLowerCase();
+    const roleFilter = document.getElementById('evalFiltRole')?.value||'ALL';
+    const filtered = emps.filter(e => {
+      const matchS = !search || e.name.toLowerCase().includes(search) || e.role.toLowerCase().includes(search);
+      const matchR = roleFilter==='ALL' || e.role===roleFilter;
+      return matchS && matchR;
     });
 
-    if (filtered.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px; color:var(--gray-400);">لا توجد نتائج تطابق الفلتر المحدد</td></tr>'; return; }
+    // Stats
+    const total = emps.length;
+    const rated = emps.filter(e=>e.score!==null&&e.score!=='').length;
+    const avg = rated ? (emps.filter(e=>e.score!==null&&e.score!=='').reduce((s,e)=>s+parseFloat(e.score||0),0)/rated).toFixed(1) : '—';
+    statsBar.style.display = 'flex';
+    statsBar.innerHTML = `
+      <div class="eval-stat"><div class="eval-stat-num">${total}</div><div class="eval-stat-lbl">إجمالي الموظفين</div></div>
+      <div class="eval-stat"><div class="eval-stat-num" style="color:var(--green)">${rated}</div><div class="eval-stat-lbl">تم تقييمهم</div></div>
+      <div class="eval-stat"><div class="eval-stat-num" style="color:var(--maw-navy)">${total-rated}</div><div class="eval-stat-lbl">لم يُقيَّم</div></div>
+      <div class="eval-stat"><div class="eval-stat-num" style="color:var(--plum)">${avg}%</div><div class="eval-stat-lbl">متوسط التقييم</div></div>
+    `;
 
-    tbody.innerHTML = filtered.map(ev => {
-      let incentiveColor = ev.incentive >= 100 ? '#27AE60' : (ev.incentive > 0 ? '#B8923A' : '#C0392B');
-      const evM = ev.month || "4"; const evY = ev.year || "2026";
-      return `<tr><td style="text-align:right; font-weight:700;">${evM} - ${evY}</td><td style="text-align:right; font-size:0.7rem; color:var(--gray-600);">${ev.date}</td><td style="text-align:right; font-weight:700;">${ev.name}</td><td style="text-align:right; color:var(--plum); font-weight:600;">${ev.role}</td><td style="font-weight:700; direction:ltr;">${ev.achievement}%</td><td style="color:${incentiveColor}; font-weight:800; direction:ltr;">${ev.incentive}%</td><td><button class="btn-del-eval" onclick="window.deleteEvaluation('${ev.id}')">حذف ✕</button></td></tr>`;
+    actionBar.style.display = 'flex';
+
+    if(!filtered.length) {
+      container.innerHTML = '<div class="eval-empty">لا توجد نتائج مطابقة</div>';
+      return;
+    }
+
+    const rows = filtered.map((emp,i) => {
+      const sc = emp.score!==null&&emp.score!=='' ? parseFloat(emp.score) : null;
+      const {badge, incentive} = calcIncentive(sc);
+      const empIdx = emps.indexOf(emp);
+      return `<tr>
+        <td style="font-size:10px;color:var(--gray-600);font-family:monospace">${emp.id||'—'}</td>
+        <td style="font-weight:700;color:var(--maw-navy)">${emp.name}</td>
+        <td style="color:var(--plum);font-weight:600;font-size:11px">${emp.role}</td>
+        <td style="font-size:11px">${emp.section}</td>
+        <td><span class="nat-flag">${emp.nationality}</span></td>
+        <td style="font-size:11px;color:var(--gray-600)">${emp.manager}</td>
+        <td>
+          <input class="eval-score-input" type="number" min="0" max="200" step="0.5"
+            value="${sc!==null?sc:''}" placeholder="—"
+            oninput="window.updateEmpScore(${empIdx},this.value)"
+            style="${sc!==null?(sc>=96?'border-color:var(--green);color:var(--green)':(sc>=90?'border-color:var(--maw-navy);color:var(--maw-navy)':'border-color:var(--red);color:var(--red)')):''}">
+        </td>
+        <td style="text-align:center">${badge}</td>
+        <td>
+          <input class="eval-notes-input" type="text" placeholder="ملاحظة..."
+            value="${emp.notes||''}"
+            oninput="window.updateEmpNotes(${empIdx},this.value)">
+        </td>
+      </tr>`;
     }).join('');
+
+    container.innerHTML = `
+      <div class="eval-table-wrap">
+        <table class="eval-table">
+          <thead><tr>
+            <th>ID</th>
+            <th>الاسم</th>
+            <th>الوظيفة الحالية</th>
+            <th>القسم</th>
+            <th>الجنسية</th>
+            <th>المدير المباشر</th>
+            <th class="center">التقييم %</th>
+            <th class="center">الحافز</th>
+            <th>ملاحظات</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  };
+
+  function calcIncentive(score) {
+    if(score===null) return {badge:`<span class="incentive-badge ib-0">—</span>`, incentive:null};
+    let pct, cls;
+    if(score>120){pct=120;cls='ib-100';}
+    else if(score>=96.02){pct=100;cls='ib-100';}
+    else if(score>=94.01){pct=95;cls='ib-95';}
+    else if(score>=92.01){pct=85;cls='ib-85';}
+    else if(score>=90.0){pct=70;cls='ib-70';}
+    else{pct=0;cls='ib-0';}
+    return {badge:`<span class="incentive-badge ${cls}">${pct}%</span>`, incentive:pct};
   }
 
-  window.deleteEvaluation = function(id) {
-    if(confirm('هل أنت متأكد من حذف هذا التقييم؟')) { PARSED.evaluations = PARSED.evaluations.filter(e => String(e.id) !== String(id)); saveToCloud(); window.drawEvalTable(); }
-  }
+  window.updateEmpScore = function(idx, val) {
+    if(!PARSED.headcountEmployees) return;
+    PARSED.headcountEmployees[idx].score = val===''?null:parseFloat(val);
+    // Update incentive badge live
+    const sc = val===''?null:parseFloat(val);
+    const {badge} = calcIncentive(sc);
+    const rows = document.querySelectorAll('.eval-table tbody tr');
+    // Find the row for this emp in filtered view — simple approach: redraw stats
+    const rated = PARSED.headcountEmployees.filter(e=>e.score!==null&&e.score!=='').length;
+    const total = PARSED.headcountEmployees.length;
+    const avg = rated?(PARSED.headcountEmployees.filter(e=>e.score!==null).reduce((s,e)=>s+parseFloat(e.score||0),0)/rated).toFixed(1):'—';
+    const sb = document.getElementById('evalStatsBar');
+    if(sb) sb.querySelectorAll('.eval-stat-num')[1].textContent = rated;
+    if(sb) sb.querySelectorAll('.eval-stat-num')[2].textContent = total-rated;
+    if(sb) sb.querySelectorAll('.eval-stat-num')[3].textContent = avg+'%';
+  };
 
-  window.exportEvaluations = function() {
-    const fm = document.getElementById('evalFiltMonth').value; const fy = document.getElementById('evalFiltYear').value;
-    if(!PARSED.evaluations || PARSED.evaluations.length === 0) return;
-    const filtered = PARSED.evaluations.filter(ev => {
-      const evM = ev.month || "4"; const evY = ev.year || "2026";
-      return (fm === 'ALL' || evM == fm) && (fy === 'ALL' || evY == fy);
+  window.updateEmpNotes = function(idx, val) {
+    if(!PARSED.headcountEmployees) return;
+    PARSED.headcountEmployees[idx].notes = val;
+  };
+
+  window.saveAllEvaluations = function() {
+    if(!PARSED.headcountEmployees) return;
+    const m = document.getElementById('evalMonth').value;
+    const y = document.getElementById('evalYear').value;
+    if(!PARSED.evaluations) PARSED.evaluations = [];
+    // Remove old entries for this month/year
+    PARSED.evaluations = PARSED.evaluations.filter(ev=>!(ev.month==m&&ev.year==y));
+    // Add new
+    for(const emp of PARSED.headcountEmployees) {
+      if(emp.score===null||emp.score==='') continue;
+      const sc = parseFloat(emp.score);
+      const {incentive} = calcIncentive(sc);
+      PARSED.evaluations.push({
+        id: emp.id+'_'+m+'_'+y,
+        proceedId: emp.id,
+        month: m, year: y,
+        date: new Date().toLocaleDateString('en-GB'),
+        name: emp.name, role: emp.role,
+        company: emp.company, nationality: emp.nationality,
+        section: emp.section, manager: emp.manager,
+        achievement: sc, incentive: incentive||0,
+        notes: emp.notes||''
+      });
+    }
+    saveToCloud();
+    const st = document.getElementById('evalSaveStatus');
+    if(st){st.style.display='inline';setTimeout(()=>{st.style.display='none'},2500);}
+  };
+
+    window.exportEvaluations = function() {
+    const m = document.getElementById('evalMonth')?.value;
+    const y = document.getElementById('evalYear')?.value;
+    const emps = PARSED.headcountEmployees;
+    if(!emps||!emps.length){alert('لا توجد بيانات موظفين. ارفع ملف Headcount أولاً.');return;}
+    const rated = emps.filter(e=>e.score!==null&&e.score!=='');
+    if(!rated.length){alert('لم يتم إدخال أي تقييمات بعد.');return;}
+
+    const months=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+    const mName = months[(parseInt(m)||1)-1];
+
+    const data = rated.map(emp => {
+      const sc = parseFloat(emp.score);
+      const {incentive} = calcIncentive(sc);
+      return {
+        'PROCEED ID': emp.id,
+        'الاسم': emp.name,
+        'الوظيفة': emp.role,
+        'القسم': emp.section,
+        'الجنسية': emp.nationality,
+        'الشركة': emp.company,
+        'المدير المباشر': emp.manager,
+        'شهر التقييم': mName+' '+y,
+        'Achievement %': sc,
+        'نسبة الحافز %': incentive||0,
+        'ملاحظات': emp.notes||''
+      };
     });
-    if(filtered.length === 0) { alert("لا توجد بيانات لتصديرها."); return; }
 
-    const dataToExport = filtered.map(ev => { return {"الشهر/السنة": (ev.month || "4") + "-" + (ev.year || "2026"), "تاريخ الإدخال": ev.date, "الاسم": ev.name, "الوظيفة": ev.role, "التقييم (Achievement)": ev.achievement + "%", "نسبة الحافز (Score)": ev.incentive + "%"}; });
-    const ws = XLSX.utils.json_to_sheet(dataToExport); if(!ws['!views']) ws['!views'] = []; ws['!views'].push({ rightToLeft: true });
-    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "مسير الحوافز");
-    let fName = `تقرير_الحوافز`; if(fm !== 'ALL') fName += `_شهر_${fm}`; if(fy !== 'ALL') fName += `_سنة_${fy}`;
-    XLSX.writeFile(wb, fName + ".xlsx");
-  }
+    const ws = XLSX.utils.json_to_sheet(data);
+    if(!ws['!views']) ws['!views']=[];
+    ws['!views'].push({rightToLeft:true});
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'مسير الحوافز');
+    XLSX.writeFile(wb, `تقرير_الحوافز_${mName}_${y}.xlsx`);
+  };
 
-  // ══════════════════════════════════════════════════════════════
+    // ══════════════════════════════════════════════════════════════
   // EQUIPMENT AND MAINTENANCE
   // ══════════════════════════════════════════════════════════════
   function buildEquipmentPanel() {
