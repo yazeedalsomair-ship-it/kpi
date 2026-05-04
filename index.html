@@ -380,7 +380,7 @@ tr:hover td{background:rgba(107,29,74,0.03)}
     <div class="dash anim-section" id="dash">
       <div class="tabs">
         <div class="tab on" onclick="window.showTab('ov',this)">📊 نظرة عامة</div>
-        <div class="tab" onclick="window.showTab('madinah',this)">📦 MADINAH</div>
+        <div class="tab" id="tabMadinah" onclick="window.showTab('madinah',this)">📦 MADINAH</div>
         <div class="tab" onclick="window.showTab('alula',this)" id="tabAlula">🚚 ALULA</div>
         <div class="tab" onclick="window.showTab('asn',this)">🏭 ASN</div>
         <div class="tab" onclick="window.showTab('outbound',this)">📤 Outbound</div>
@@ -491,6 +491,13 @@ tr:hover td{background:rgba(107,29,74,0.03)}
     document.getElementById('footerWhName').textContent = selectedWhName;
     document.getElementById('alulaTitle').textContent = selectedWhEn + ' Dispatched';
     document.getElementById('tabAlula').innerHTML = '🚚 ' + selectedWhEn;
+
+    // ALULA + MADINAH cards — تظهر فقط في العلا وينبع
+    const showAlulaMainah = ['alula','yanbu'].includes(selectedWhId);
+    document.getElementById('card-alula').style.display   = showAlulaMainah ? '' : 'none';
+    document.getElementById('card-madinah').style.display = showAlulaMainah ? '' : 'none';
+    document.getElementById('tabAlula').style.display     = showAlulaMainah ? '' : 'none';
+    document.getElementById('tabMadinah').style.display   = showAlulaMainah ? '' : 'none';
     
     document.getElementById('splash').classList.add('exit');
     setTimeout(() => {
@@ -867,6 +874,9 @@ tr:hover td{background:rgba(107,29,74,0.03)}
           const manager = gv(row,['direct manager','مدير']);
           const mobile = gv(row,['mobile','جوال']);
           const location = gv(row,['location','موقع']);
+          const nupcoMob = gv(row,['nupco mobilization','mobilization']);
+          const goLive   = gv(row,['go-live','go live','golive']);
+          const hiringDate = gv(row,['hiring date','hire date','hiring']);
 
           employees.push({
             id: proceedId,
@@ -878,6 +888,9 @@ tr:hover td{background:rgba(107,29,74,0.03)}
             manager: manager||'—',
             mobile: mobile||'—',
             location: location||'—',
+            nupcoMob: nupcoMob||'—',
+            goLive: goLive||'—',
+            hiringDate: hiringDate||'—',
             score: null, notes: ''
           });
         }
@@ -959,12 +972,17 @@ tr:hover td{background:rgba(107,29,74,0.03)}
       const sc = emp.score!==null&&emp.score!=='' ? parseFloat(emp.score) : null;
       const {badge, incentive} = calcIncentive(sc);
       const empIdx = emps.indexOf(emp);
-      return `<tr>
+      return `<tr data-emp-idx="${empIdx}">
         <td style="font-size:10px;color:var(--gray-600);font-family:monospace">${emp.id||'—'}</td>
         <td style="font-weight:700;color:var(--maw-navy)">${emp.name}</td>
         <td style="color:var(--plum);font-weight:600;font-size:11px">${emp.role}</td>
         <td style="font-size:11px">${emp.section}</td>
         <td><span class="nat-flag">${emp.nationality}</span></td>
+        <td style="font-size:11px;color:var(--gray-600)">${emp.company!=='—'?emp.company:''}</td>
+        <td style="font-size:11px;color:var(--maw-navy);font-weight:600">${emp.nupcoMob!=='—'?emp.nupcoMob:'—'}</td>
+        <td style="font-size:11px;color:var(--gray-600)">${emp.location!=='—'?emp.location:'—'}</td>
+        <td style="font-size:11px;color:var(--gray-600);direction:ltr;text-align:left">${emp.goLive!=='—'?emp.goLive.toString().slice(0,10):'—'}</td>
+        <td style="font-size:11px;color:var(--gray-600);direction:ltr;text-align:left">${emp.hiringDate!=='—'?emp.hiringDate.toString().slice(0,10):'—'}</td>
         <td style="font-size:11px;color:var(--gray-600)">${emp.manager}</td>
         <td>
           <input class="eval-score-input" type="number" min="0" max="200" step="0.5"
@@ -972,7 +990,7 @@ tr:hover td{background:rgba(107,29,74,0.03)}
             oninput="window.updateEmpScore(${empIdx},this.value)"
             style="${sc!==null?(sc>=96?'border-color:var(--green);color:var(--green)':(sc>=90?'border-color:var(--maw-navy);color:var(--maw-navy)':'border-color:var(--red);color:var(--red)')):''}">
         </td>
-        <td style="text-align:center">${badge}</td>
+        <td class="badge-cell" style="text-align:center">${badge}</td>
         <td>
           <input class="eval-notes-input" type="text" placeholder="ملاحظة..."
             value="${emp.notes||''}"
@@ -990,6 +1008,11 @@ tr:hover td{background:rgba(107,29,74,0.03)}
             <th>الوظيفة الحالية</th>
             <th>القسم</th>
             <th>الجنسية</th>
+            <th>الشركة</th>
+            <th>NUPCO Mobilization</th>
+            <th>Location</th>
+            <th>Go-Live</th>
+            <th>Hiring Date</th>
             <th>المدير المباشر</th>
             <th class="center">التقييم %</th>
             <th class="center">الحافز</th>
@@ -1000,7 +1023,7 @@ tr:hover td{background:rgba(107,29,74,0.03)}
       </div>`;
   };
 
-  function calcIncentive(score) {
+  window.calcIncentive = function calcIncentive(score) {
     if(score===null) return {badge:`<span class="incentive-badge ib-0">—</span>`, incentive:null};
     let pct, cls;
     if(score>120){pct=120;cls='ib-100';}
@@ -1014,19 +1037,36 @@ tr:hover td{background:rgba(107,29,74,0.03)}
 
   window.updateEmpScore = function(idx, val) {
     if(!PARSED.headcountEmployees) return;
-    PARSED.headcountEmployees[idx].score = val===''?null:parseFloat(val);
-    // Update incentive badge live
     const sc = val===''?null:parseFloat(val);
+    PARSED.headcountEmployees[idx].score = sc;
+
+    // ── Update badge cell live ──
     const {badge} = calcIncentive(sc);
-    const rows = document.querySelectorAll('.eval-table tbody tr');
-    // Find the row for this emp in filtered view — simple approach: redraw stats
-    const rated = PARSED.headcountEmployees.filter(e=>e.score!==null&&e.score!=='').length;
-    const total = PARSED.headcountEmployees.length;
-    const avg = rated?(PARSED.headcountEmployees.filter(e=>e.score!==null).reduce((s,e)=>s+parseFloat(e.score||0),0)/rated).toFixed(1):'—';
+    const row = document.querySelector(`.eval-table tbody tr[data-emp-idx="${idx}"]`);
+    if(row) {
+      const badgeCell = row.querySelector('.badge-cell');
+      if(badgeCell) badgeCell.innerHTML = badge;
+      // Update input color
+      const input = row.querySelector('.eval-score-input');
+      if(input && sc!==null) {
+        if(sc>=96) input.style.cssText='border-color:var(--green);color:var(--green)';
+        else if(sc>=90) input.style.cssText='border-color:var(--maw-navy);color:var(--maw-navy)';
+        else input.style.cssText='border-color:var(--red);color:var(--red)';
+      } else if(input) { input.style.cssText=''; }
+    }
+
+    // ── Update stats bar ──
+    const emps = PARSED.headcountEmployees;
+    const rated = emps.filter(e=>e.score!==null&&e.score!=='').length;
+    const total = emps.length;
+    const avg = rated?(emps.filter(e=>e.score!==null).reduce((s,e)=>s+parseFloat(e.score||0),0)/rated).toFixed(1):'—';
     const sb = document.getElementById('evalStatsBar');
-    if(sb) sb.querySelectorAll('.eval-stat-num')[1].textContent = rated;
-    if(sb) sb.querySelectorAll('.eval-stat-num')[2].textContent = total-rated;
-    if(sb) sb.querySelectorAll('.eval-stat-num')[3].textContent = avg+'%';
+    if(sb) {
+      const nums = sb.querySelectorAll('.eval-stat-num');
+      if(nums[1]) nums[1].textContent = rated;
+      if(nums[2]) nums[2].textContent = total-rated;
+      if(nums[3]) nums[3].textContent = avg+'%';
+    }
   };
 
   window.updateEmpNotes = function(idx, val) {
@@ -1055,7 +1095,11 @@ tr:hover td{background:rgba(107,29,74,0.03)}
         company: emp.company, nationality: emp.nationality,
         section: emp.section, manager: emp.manager,
         achievement: sc, incentive: incentive||0,
-        notes: emp.notes||''
+        notes: emp.notes||'',
+        nupcoMob: emp.nupcoMob||'—',
+        location: emp.location||'—',
+        goLive: emp.goLive||'—',
+        hiringDate: emp.hiringDate||'—'
       });
     }
     saveToCloud();
@@ -1084,6 +1128,10 @@ tr:hover td{background:rgba(107,29,74,0.03)}
         'القسم': emp.section,
         'الجنسية': emp.nationality,
         'الشركة': emp.company,
+        'NUPCO Mobilization': emp.nupcoMob||'—',
+        'Location': emp.location||'—',
+        'Go-Live': emp.goLive||'—',
+        'Hiring Date': emp.hiringDate||'—',
         'المدير المباشر': emp.manager,
         'شهر التقييم': mName+' '+y,
         'Achievement %': sc,
