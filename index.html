@@ -47,7 +47,7 @@ body{font-family:'Tajawal',sans-serif;background:var(--off-white);color:var(--gr
 .splash-subtitle{text-align:center;opacity:0;animation:fade-up 0.8s ease 1.4s forwards;margin-bottom:50px}
 .splash-subtitle h2{font-size:1.3rem;font-weight:300;color:rgba(255,255,255,0.7);letter-spacing:1px}
 .splash-subtitle h2 span{color:var(--maw-cyan);font-weight:700}
-.wh-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;max-width:1150px;width:95%;opacity:0;animation:cards-entrance 1s cubic-bezier(0.16,1,0.3,1) 1.8s forwards}
+.wh-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:24px;max-width:1350px;width:95%;opacity:0;animation:cards-entrance 1s cubic-bezier(0.16,1,0.3,1) 1.8s forwards}
 @keyframes cards-entrance{0%{opacity:0;transform:translateY(50px)}100%{opacity:1;transform:translateY(0)}}
 .wh-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:36px 20px;text-align:center;cursor:pointer;transition:all 0.5s cubic-bezier(0.25,0.46,0.45,0.94);position:relative;overflow:hidden;backdrop-filter:blur(10px);}
 .wh-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,180,216,0.08),transparent);opacity:0;transition:opacity 0.5s}
@@ -62,6 +62,7 @@ body{font-family:'Tajawal',sans-serif;background:var(--off-white);color:var(--gr
 .wh-icon-yanbu{background:linear-gradient(135deg,rgba(0,31,95,0.15),rgba(13,58,140,0.25));border:1px solid rgba(0,31,95,0.3)}
 .wh-icon-dawadmi{background:linear-gradient(135deg,rgba(0,180,216,0.15),rgba(0,180,216,0.25));border:1px solid rgba(0,180,216,0.3)}
 .wh-icon-sulayyil{background:linear-gradient(135deg,rgba(230,126,34,0.15),rgba(211,84,0,0.25));border:1px solid rgba(230,126,34,0.3)}
+.wh-icon-sudair{background:linear-gradient(135deg,rgba(39,174,96,0.15),rgba(15,110,86,0.25));border:1px solid rgba(39,174,96,0.3)}
 .wh-name{font-size:1.15rem;font-weight:800;color:#fff;margin-bottom:6px;transition:color 0.3s;letter-spacing:0.5px}
 .wh-name-en{font-family:'Montserrat',sans-serif;font-size:0.65rem;color:rgba(255,255,255,0.35);letter-spacing:2px;font-weight:600;text-transform:uppercase;margin-bottom:12px}
 .wh-desc{font-size:0.75rem;color:rgba(255,255,255,0.4);line-height:1.7}
@@ -69,6 +70,7 @@ body{font-family:'Tajawal',sans-serif;background:var(--off-white);color:var(--gr
 .wh-card:nth-child(2){animation:card-stagger 0.8s cubic-bezier(0.16,1,0.3,1) 2.15s both}
 .wh-card:nth-child(3){animation:card-stagger 0.8s cubic-bezier(0.16,1,0.3,1) 2.3s both}
 .wh-card:nth-child(4){animation:card-stagger 0.8s cubic-bezier(0.16,1,0.3,1) 2.45s both}
+.wh-card:nth-child(5){animation:card-stagger 0.8s cubic-bezier(0.16,1,0.3,1) 2.6s both}
 @keyframes card-stagger{0%{opacity:0;transform:translateY(40px) scale(0.95)}100%{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes fade-up{0%{opacity:0;transform:translateY(20px)}100%{opacity:1;transform:translateY(0)}}
 
@@ -231,8 +233,9 @@ tr:hover td{background:rgba(107,29,74,0.03)}
 .footer{background:var(--plum-deeper);padding:20px 32px;text-align:center;color:rgba(255,255,255,0.3);font-size:0.75rem;margin-top:40px}
 
 /* ===== RESPONSIVE ===== */
-@media(max-width:1024px){.wh-grid{grid-template-columns:repeat(2,1fr);max-width:700px}}
-@media(max-width:600px){.wh-grid{grid-template-columns:1fr;max-width:340px}.splash-brand h1{font-size:2rem;letter-spacing:4px}}
+@media(max-width:1200px){.wh-grid{grid-template-columns:repeat(3,1fr);max-width:800px}}
+@media(max-width:700px){.wh-grid{grid-template-columns:repeat(2,1fr);max-width:500px}}
+@media(max-width:400px){.wh-grid{grid-template-columns:1fr;max-width:340px}.splash-brand h1{font-size:2rem;letter-spacing:4px}}
 @media(max-width:768px){.header-inner{flex-wrap:wrap;gap:10px;justify-content:center}.container{padding:16px}.chart-row{grid-template-columns:1fr}.kpi-row{grid-template-columns:repeat(2,1fr)}.tab{padding:10px 14px;font-size:0.75rem}}
 </style>
 </head>
@@ -265,6 +268,10 @@ tr:hover td{background:rgba(107,29,74,0.03)}
     <!-- مستودع السليل الجديد -->
     <div class="wh-card" onclick="window.selectWarehouse('sulayyil','مستودع السليل','SULAYYIL')">
         <div class="wh-icon wh-icon-sulayyil">🌴</div><div class="wh-name">مستودع السليل</div><div class="wh-name-en">SULAYYIL WAREHOUSE</div><div class="wh-desc">محافظة السليل — الرياض<br>موصول السليل</div>
+    </div>
+    <!-- مستودع سدير -->
+    <div class="wh-card" onclick="window.selectWarehouse('sudair','مستودع سدير','SUDAIR')">
+        <div class="wh-icon wh-icon-sudair">🏭</div><div class="wh-name">مستودع سدير</div><div class="wh-name-en">SUDAIR WAREHOUSE</div><div class="wh-desc">منطقة سدير — الرياض<br>موصول سدير</div>
     </div>
   </div>
 </div>
